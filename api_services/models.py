@@ -100,6 +100,7 @@ class Booking(models.Model):
     booking_id = models.IntegerField(primary_key=True)
     contractor_name = models.CharField(max_length=500)
     contractor_email = models.EmailField()
+    labour_skill = models.CharField(max_length=500)
     labour_count = models.IntegerField()
     date_of_booking = models.DateField()
     start_time = models.TimeField()
