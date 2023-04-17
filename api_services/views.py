@@ -1,5 +1,6 @@
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from api_services.models import Account, Labour, Booking, Payment
 from api_services.serializers import AccountSerializer, LabourSerializer, BookingSerializer
@@ -35,6 +36,7 @@ def registration_view(request):
     
 
 @api_view(['POST',])
+@permission_classes((IsAuthenticated,))
 def user_info(request):
     username = request.POST['username']
     password = request.POST['password']
@@ -49,6 +51,7 @@ def user_info(request):
     
 
 @api_view(['GET', 'POST'])
+@permission_classes((IsAuthenticated,))
 def labour_count_list(request):
 
     if request.method == 'GET':
@@ -68,6 +71,7 @@ def labour_count_list(request):
     
 
 @api_view(['GET', 'POST'])
+@permission_classes((IsAuthenticated,))
 def booking_view(request):
 
     if request.method == 'GET':
