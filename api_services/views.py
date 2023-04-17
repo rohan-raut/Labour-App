@@ -16,6 +16,7 @@ def registration_view(request):
         data = {}
         if serializer.is_valid():
             account = serializer.save()
+            
             # populate the labour table based on skills
             labour_obj = Labour.objects.get(skill=account.skills)
             labour_obj.count = labour_obj.count + 1
@@ -34,6 +35,7 @@ def registration_view(request):
             data = serializer.errors
         return Response(data)
     
+
 
 @api_view(['POST',])
 @permission_classes((IsAuthenticated,))
