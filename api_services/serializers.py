@@ -11,7 +11,7 @@ class LabourSerializer(serializers.ModelSerializer):
 class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
-        fields = ['contractor_name', 'contractor_email', 'labour_skill', 'labour_count', 'date_of_booking', 'start_time', 'end_time']
+        fields = ['contractor_name', 'contractor_email', 'labour_skill', 'labour_count', 'start_date', 'end_date', 'start_time', 'end_time', 'location']
         read_only_fields = ['booking_id']
 
 

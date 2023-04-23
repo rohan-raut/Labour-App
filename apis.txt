@@ -5,3 +5,6 @@ http://127.0.0.1:8000/api/labour-count
 http://127.0.0.1:8000/api/booking
 
 @permission_classes((IsAuthenticated,))
+
+
+pip install django
