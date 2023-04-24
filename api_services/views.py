@@ -18,9 +18,10 @@ def registration_view(request):
             account = serializer.save()
             
             # populate the labour table based on skills
-            labour_obj = Labour.objects.get(skill=account.skills)
-            labour_obj.count = labour_obj.count + 1
-            labour_obj.save()
+            if(account.skills != "Contractor"):
+                labour_obj = Labour.objects.get(skill=account.skills)
+                labour_obj.count = labour_obj.count + 1
+                labour_obj.save()
 
             data['response'] = 'Successfully registered a new user.'
             data['email'] = account.email
