@@ -41,16 +41,18 @@ def registration_view(request):
 @api_view(['POST',])
 @permission_classes((IsAuthenticated,))
 def user_info(request):
-    username = request.POST['username']
-    password = request.POST['password']
-    user = authenticate(request, email=username, password=password)
-    data = {}
-    if user is not None:
-        serializer = AccountSerializer(user)
-        return Response(serializer.data)
-    else:
-        data['response'] = 'Wrong credentials.'
-        return Response(data)
+    if request.method == "POST":
+        username = request.data['username']
+        password = request.data['password']  
+
+        user = authenticate(request, email=username, password=password)
+        data = {}
+        if user is not None:
+            serializer = AccountSerializer(user)
+            return Response(serializer.data)
+        else:
+            data['response'] = 'Wrong credentials.'
+            return Response(data)
     
 
 @api_view(['GET', 'POST'])
