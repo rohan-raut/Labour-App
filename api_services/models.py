@@ -97,7 +97,7 @@ class Labour(models.Model):
 
 
 class Booking(models.Model):
-    booking_id = models.IntegerField(primary_key=True)
+    booking_id = models.AutoField(primary_key=True)
     contractor_name = models.CharField(max_length=500)
     contractor_email = models.EmailField()
     labour_skill = models.CharField(max_length=500)
@@ -111,7 +111,7 @@ class Booking(models.Model):
 
 
 class Payment(models.Model):
-    payment_id = models.IntegerField(primary_key=True)
+    payment_id = models.AutoField(primary_key=True)
     booking_id = models.IntegerField()
     payment_date = models.DateField()
     amount = models.IntegerField()

@@ -11,4 +11,4 @@ class LabourFilter(django_filters.FilterSet):
 class BookingFilter(django_filters.FilterSet):
     class Meta:
         model = Booking
-        fields = ['booking_id', 'contractor_email', 'start_date', 'end_date']
+        fields = ['booking_id', 'contractor_email', 'start_date', 'end_date', 'status']
