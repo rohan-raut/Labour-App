@@ -107,6 +107,7 @@ class Booking(models.Model):
     start_time = models.TimeField()
     end_time = models.TimeField()
     location = models.CharField(max_length=1000)
+    status = models.CharField(max_length=100)
 
 
 class Payment(models.Model):
