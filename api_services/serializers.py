@@ -1,11 +1,17 @@
 from rest_framework import serializers
-from api_services.models import Account, Labour, Booking, Payment
+from api_services.models import Account, Skill, Labour, Booking, Payment
+
+
+class SkillSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Skill
+        fields = ['skill', 'count', 'cost_per_hour']
 
 
 class LabourSerializer(serializers.ModelSerializer):
     class Meta:
         model = Labour
-        fields = ['skill', 'count', 'cost_per_hour']
+        fields = ['first_name', 'last_name', 'email', 'phone', 'skills']
 
 
 class BookingSerializer(serializers.ModelSerializer):
@@ -21,7 +27,7 @@ class AccountSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Account
-        fields = ['email', 'username', 'first_name', 'last_name', 'phone', 'skills', 'user_role', 'password', 'password2']
+        fields = ['email', 'username', 'first_name', 'last_name', 'phone', 'user_role', 'password', 'password2']
         extra_kwargs = {
             'password': {'write_only': True}
         }
@@ -34,7 +40,6 @@ class AccountSerializer(serializers.ModelSerializer):
             last_name = self.validated_data['last_name'],
             user_role = self.validated_data['user_role'],
             phone = self.validated_data['phone'],
-            skills = self.validated_data['skills'],
         )
 
         password = self.validated_data['password']
@@ -51,7 +56,7 @@ class AccountSerializer(serializers.ModelSerializer):
 class UserInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
-        fields = ['email', 'username', 'first_name', 'last_name', 'phone', 'skills', 'user_role', 'password']
+        fields = ['email', 'username', 'first_name', 'last_name', 'phone', 'user_role', 'password']
         extra_kwargs = {
             'password': {'write_only': True}
         }

@@ -2,10 +2,10 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from api_services.models import Account, Labour, Booking, Payment
-from api_services.serializers import AccountSerializer, LabourSerializer, BookingSerializer
+from api_services.models import Account, Skill, Labour, Booking, Payment
+from api_services.serializers import AccountSerializer, SkillSerializer, LabourSerializer, BookingSerializer
 from rest_framework.authtoken.models import Token
-from api_services.filters import LabourFilter, BookingFilter
+from api_services.filters import SkillFilter, BookingFilter
 from django.contrib.auth import authenticate
 
 
@@ -16,12 +16,6 @@ def registration_view(request):
         data = {}
         if serializer.is_valid():
             account = serializer.save()
-            
-            # populate the labour table based on skills
-            if(account.skills != "Contractor"):
-                labour_obj = Labour.objects.get(skill=account.skills)
-                labour_obj.count = labour_obj.count + 1
-                labour_obj.save()
 
             data['response'] = 'Successfully registered a new user.'
             data['email'] = account.email
@@ -29,7 +23,6 @@ def registration_view(request):
             data['last_name'] = account.last_name
             data['user_role'] = account.user_role
             data['phone'] = account.phone
-            data['skills'] = account.skills
             token = Token.objects.get(user=account).key
             data['token'] = token
         else:
@@ -57,20 +50,43 @@ def user_info(request):
 
 @api_view(['GET', 'POST'])
 @permission_classes((IsAuthenticated,))
-def labour_count_list(request):
+def skill_list(request):
+
+    if request.method == 'GET':
+        snippets = Skill.objects.all()
+        filterset = SkillFilter(request.GET, queryset=snippets)
+        if filterset.is_valid():
+            snippets = filterset.qs
+        serializer = SkillSerializer(snippets, many=True)   
+        return Response(serializer.data)
+
+    elif request.method == 'POST':
+        serializer = SkillSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+@api_view(['GET', 'POST'])
+@permission_classes((IsAuthenticated,))
+def labour_list(request):
 
     if request.method == 'GET':
         snippets = Labour.objects.all()
-        filterset = LabourFilter(request.GET, queryset=snippets)
-        if filterset.is_valid():
-            snippets = filterset.qs
         serializer = LabourSerializer(snippets, many=True)   
         return Response(serializer.data)
 
     elif request.method == 'POST':
         serializer = LabourSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            labour = serializer.save()
+
+            # populate the labour table based on skills
+            skill_obj = Skill.objects.get(skill=labour.skills)
+            skill_obj.count = skill_obj.count + 1
+            skill_obj.save()
+            
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     

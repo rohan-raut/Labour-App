@@ -1,10 +1,10 @@
 import django_filters
-from api_services.models import Booking, Labour
+from api_services.models import Booking, Skill
 
 
-class LabourFilter(django_filters.FilterSet):
+class SkillFilter(django_filters.FilterSet):
     class Meta:
-        model = Labour
+        model = Skill
         fields = ['skill']
 
 

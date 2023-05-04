@@ -65,7 +65,6 @@ class Account(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(max_length=100)
     user_role = models.CharField(max_length=100)
     phone = models.CharField(max_length=10)
-    skills = models.CharField(max_length=5000)
     date_joined = models.DateTimeField(verbose_name="date joined", auto_now_add=True)
     last_login = models.DateTimeField(verbose_name="last login", auto_now=True)
     is_admin = models.BooleanField(default=False)
@@ -90,10 +89,18 @@ class Account(AbstractBaseUser, PermissionsMixin):
 
 
 # Model for Labour
-class Labour(models.Model):
+class Skill(models.Model):
     skill = models.CharField(max_length=100, primary_key=True)
     count = models.IntegerField()
     cost_per_hour = models.IntegerField()
+
+
+class Labour(models.Model):
+    first_name = models.CharField(max_length=500)
+    last_name = models.CharField(max_length=500)
+    email = models.EmailField()
+    skills = models.CharField(max_length=1000)
+    phone = models.CharField(max_length=10)
 
 
 class Booking(models.Model):
