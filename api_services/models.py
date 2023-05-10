@@ -98,9 +98,10 @@ class Skill(models.Model):
 class Labour(models.Model):
     first_name = models.CharField(max_length=500)
     last_name = models.CharField(max_length=500)
-    email = models.EmailField()
+    email = models.EmailField(primary_key=True)
     skills = models.CharField(max_length=1000)
     phone = models.CharField(max_length=10)
+    passport_no = models.CharField(max_length=100)
 
 
 class Booking(models.Model):

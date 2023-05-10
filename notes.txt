@@ -1,14 +1,14 @@
 INSERT INTO public.api_services_skill(skill, count, cost_per_hour) VALUES ('General Labour', 0, 100);
 INSERT INTO public.api_services_skill(skill, count, cost_per_hour) VALUES ('Hauler', 0, 100);
-INSERT INTO public.api_services_skill(skill, count, cost_per_hour) VALUES ('Pick/Pack', 0, 100);
-INSERT INTO public.api_services_skill(skill, count, cost_per_hour) VALUES ('Shipping/Receiving', 0, 100);
+INSERT INTO public.api_services_skill(skill, count, cost_per_hour) VALUES ('Pick-Pack', 0, 100);
+INSERT INTO public.api_services_skill(skill, count, cost_per_hour) VALUES ('Shipping-Receiving', 0, 100);
 INSERT INTO public.api_services_skill(skill, count, cost_per_hour) VALUES ('Lumper', 0, 100);
 INSERT INTO public.api_services_skill(skill, count, cost_per_hour) VALUES ('Sanitation', 0, 100);
 INSERT INTO public.api_services_skill(skill, count, cost_per_hour) VALUES ('Dishwasher', 0, 100);
 INSERT INTO public.api_services_skill(skill, count, cost_per_hour) VALUES ('Food Service worker', 0, 100);
 INSERT INTO public.api_services_skill(skill, count, cost_per_hour) VALUES ('Server', 0, 100);
-INSERT INTO public.api_services_skill(skill, count, cost_per_hour) VALUES ('Set up/Tear down', 0, 100);
-INSERT INTO public.api_services_skill(skill, count, cost_per_hour) VALUES ('Cook/Assistant Cook', 0, 100);
+INSERT INTO public.api_services_skill(skill, count, cost_per_hour) VALUES ('Set up-Tear down', 0, 100);
+INSERT INTO public.api_services_skill(skill, count, cost_per_hour) VALUES ('Cook-Assistant Cook', 0, 100);
 INSERT INTO public.api_services_skill(skill, count, cost_per_hour) VALUES ('Busser', 0, 100);
 INSERT INTO public.api_services_skill(skill, count, cost_per_hour) VALUES ('Runner', 0, 100);
 INSERT INTO public.api_services_skill(skill, count, cost_per_hour) VALUES ('Painter', 0, 100);

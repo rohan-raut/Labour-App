@@ -11,7 +11,7 @@ class SkillSerializer(serializers.ModelSerializer):
 class LabourSerializer(serializers.ModelSerializer):
     class Meta:
         model = Labour
-        fields = ['first_name', 'last_name', 'email', 'phone', 'skills']
+        fields = ['first_name', 'last_name', 'email', 'phone', 'skills', 'passport_no']
 
 
 class BookingSerializer(serializers.ModelSerializer):

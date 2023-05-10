@@ -9,7 +9,9 @@ from api_services.filters import SkillFilter, BookingFilter
 from django.contrib.auth import authenticate
 
 
-@api_view(['POST',])
+# Get and Post Views
+
+@api_view(['POST'])
 def registration_view(request):
     if request.method == 'POST':
         serializer = AccountSerializer(data=request.data)
@@ -83,9 +85,11 @@ def labour_list(request):
             labour = serializer.save()
 
             # populate the labour table based on skills
-            skill_obj = Skill.objects.get(skill=labour.skills)
-            skill_obj.count = skill_obj.count + 1
-            skill_obj.save()
+            skillList = (labour.skills).split(',')
+            for skill in skillList:
+                skill_obj = Skill.objects.get(skill=skill)
+                skill_obj.count = skill_obj.count + 1
+                skill_obj.save()
             
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -111,3 +115,163 @@ def booking_view(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
+# Update Views
+
+@api_view(['PUT',])
+@permission_classes((IsAuthenticated,))
+def update_user_info(request, pk):
+
+    try:
+        user = Account.objects.get(email=pk)
+    except Account.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == "PUT":
+        user.first_name = request.data['first_name']
+        user.last_name = request.data['last_name']
+        user.phone = request.data['phone']
+        user.user_role = request.data['user_role']
+        user.save()
+        
+        if user is not None:
+            serializer = AccountSerializer(user)
+            return Response(serializer.data)
+        
+        return Response(serializer.errors, status=status.HTTP_404_NOT_FOUND)
+    
+
+@api_view(['PUT'])
+@permission_classes((IsAuthenticated,))
+def update_skill_list(request, pk):
+
+    try:
+        skill = Skill.objects.get(skill=pk)
+    except Skill.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'PUT': 
+        serializer = SkillSerializer(skill, data=request.data)   
+        data = {}
+        if serializer.is_valid():
+            serializer.save()
+            data["success"] = "Update Successful."
+            return Response(data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+@api_view(['PUT'])
+@permission_classes((IsAuthenticated,))
+def update_labour_list(request, pk):
+
+    try:
+        labour = Labour.objects.get(email=pk)
+    except Labour.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'PUT': 
+        serializer = LabourSerializer(labour, data=request.data)   
+        data = {}
+        if serializer.is_valid():
+            skillList = (labour.skills).split(',')
+            for skill in skillList:
+                skill_obj = Skill.objects.get(skill=skill)
+                skill_obj.count = skill_obj.count - 1
+                skill_obj.save()
+
+            labour = serializer.save()
+            skillList = (labour.skills).split(',')
+            for skill in skillList:
+                skill_obj = Skill.objects.get(skill=skill)
+                skill_obj.count = skill_obj.count + 1
+                skill_obj.save()
+
+            data["success"] = "Update Successful."
+            return Response(data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
+@api_view(['PUT'])
+@permission_classes((IsAuthenticated,))
+def update_booking_view(request, pk):
+
+    try:
+        booking = Booking.objects.get(pk=pk)
+    except Booking.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'PUT': 
+        serializer = BookingSerializer(booking, data=request.data)   
+        data = {}
+        if serializer.is_valid():
+            serializer.save()
+            data["success"] = "Update Successful."
+            return Response(data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+# Delete Views
+
+@api_view(['DELETE'])
+@permission_classes((IsAuthenticated,))
+def delete_skill_list(request, pk):
+
+    try:
+        skill = Skill.objects.get(skill=pk)
+    except Skill.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'DELETE': 
+        operation = skill.delete()   
+        data = {}
+        if operation:
+            data['success'] = "Delete Successful."
+        else:
+            data['failure'] = "Delete Failed."
+        return Response(data=data)
+    
+
+@api_view(['DELETE'])
+@permission_classes((IsAuthenticated,))
+def delete_labour_list(request, pk):
+
+    try:
+        labour = Labour.objects.get(email=pk)
+    except Labour.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'DELETE': 
+        operation = labour.delete()   
+        skillList = (labour.skills).split(',')
+        for skill in skillList:
+            skill_obj = Skill.objects.get(skill=skill)
+            skill_obj.count = skill_obj.count - 1
+            skill_obj.save()
+
+        data = {}
+        if operation:
+            data['success'] = "Delete Successful."
+        else:
+            data['failure'] = "Delete Failed."
+        return Response(data=data)
+    
+
+
+@api_view(['DELETE'])
+@permission_classes((IsAuthenticated,))
+def delete_booking_view(request, pk):
+
+    try:
+        booking = Booking.objects.get(pk=pk)
+    except Booking.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'DELETE': 
+        operation = booking.delete()   
+        data = {}
+        if operation:
+            data['success'] = "Delete Successful."
+        else:
+            data['failure'] = "Delete Failed."
+        return Response(data=data)
