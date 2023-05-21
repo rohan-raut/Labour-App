@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from api_services.models import Account, Skill, Labour, Booking, Payment
 from api_services.serializers import AccountSerializer, SkillSerializer, LabourSerializer, BookingSerializer
 from rest_framework.authtoken.models import Token
-from api_services.filters import SkillFilter, BookingFilter
+from api_services.filters import SkillFilter, BookingFilter, LabourFilter
 from django.contrib.auth import authenticate
 
 
@@ -76,6 +76,9 @@ def labour_list(request):
 
     if request.method == 'GET':
         snippets = Labour.objects.all()
+        filterset = BookingFilter(request.GET, queryset=snippets)
+        if filterset.is_valid():
+            snippets = filterset.qs
         serializer = LabourSerializer(snippets, many=True)   
         return Response(serializer.data)
 
