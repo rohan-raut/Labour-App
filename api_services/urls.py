@@ -1,5 +1,5 @@
 from django.urls import path
-from api_services.views import registration_view, user_info, skill_list, labour_list, booking_view, update_user_info, update_skill_list, update_labour_list, update_booking_view, delete_booking_view, delete_labour_list, delete_skill_list
+from api_services.views import registration_view, user_info, skill_list, labour_list, booking_view, update_user_info, update_skill_list, update_labour_list, update_booking_view, delete_booking_view, delete_labour_list, delete_skill_list, change_password_view
 from rest_framework.authtoken.views import obtain_auth_token
 
 
@@ -10,6 +10,7 @@ urlpatterns = [
     path('skill-list', skill_list, name="skill_list"),
     path('labour-list', labour_list, name="labour_list"),
     path('booking', booking_view, name="booking_view"),
+    path('change-password', change_password_view, name="change_password_view"),
     path('update/user-info/<str:pk>', update_user_info, name="update_user_info"),
     path('update/skill-list/<str:pk>', update_skill_list, name="update_skill_list"),
     path('update/labour-list/<str:pk>', update_labour_list, name="update_labour_list"),

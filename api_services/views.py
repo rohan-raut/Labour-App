@@ -116,6 +116,32 @@ def booking_view(request):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+  
+@api_view(['POST'])
+@permission_classes((IsAuthenticated,))
+def change_password_view(request):
+    # fields: email, old_password, password, password2
+    email = request.data['email']
+    old_password = request.data['old_password']
+    password = request.data['password']
+    password2 = request.data['password2']
+
+    data = {}
+
+    if(password == password2):
+        user = authenticate(request, email=email, password=old_password)
+        if user is not None:
+            user.set_password(password)
+            user.save()
+            data['response'] = "New Password Set."
+        else:
+            data['response'] = "Wrong Password."
+    else:
+        data['response'] = "Passwords should match."
+    
+    return Response(data)
+
     
 
 # Update Views
