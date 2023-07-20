@@ -76,7 +76,7 @@ def labour_list(request):
 
     if request.method == 'GET':
         snippets = Labour.objects.all()
-        filterset = BookingFilter(request.GET, queryset=snippets)
+        filterset = LabourFilter(request.GET, queryset=snippets)
         if filterset.is_valid():
             snippets = filterset.qs
         serializer = LabourSerializer(snippets, many=True)   
