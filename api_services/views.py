@@ -7,6 +7,19 @@ from api_services.serializers import AccountSerializer, SkillSerializer, LabourS
 from rest_framework.authtoken.models import Token
 from api_services.filters import SkillFilter, BookingFilter, LabourFilter
 from django.contrib.auth import authenticate
+import smtplib
+import ssl
+import email
+from email import encoders
+from email.mime.base import MIMEBase
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+global sender_email, sender_name, password
+
+sender_email = "hayamedotmy@gmail.com"
+sender_name = "Hayame Admin"
+password = "dnndjbtorrxpyowx"
 
 
 # Get and Post Views
@@ -142,6 +155,34 @@ def change_password_view(request):
     
     return Response(data)
 
+
+@api_view(['POST'])
+@permission_classes((IsAuthenticated,))
+def send_email_view(request):
+    # fields: receiver_email, subject, body
+
+    receiver_email = request.data['receiver_email']
+    subject = request.data['subject']
+    body = request.data['body']
+    data = {}
+
+    try:
+        smtpObj = smtplib.SMTP(host='smtp.gmail.com', port=587)
+        smtpObj.starttls()
+        smtpObj.login(sender_email, password)
+        message = MIMEMultipart()
+        message["From"] = sender_name
+        message["To"] = receiver_email
+        message["Subject"] = subject
+        message.attach(MIMEText(body, "plain"))
+        text = message.as_string()
+        smtpObj.sendmail(sender_email, receiver_email, text)
+        smtpObj.close()
+        data['response'] = "Successfully sent email"
+    except smtplib.SMTPException:
+        data['response'] = "Error: unable to send email"
+    
+    return Response(data)
     
 
 # Update Views
