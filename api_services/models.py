@@ -50,6 +50,7 @@ class MyAccountManager(BaseUserManager):
             last_name = last_name,
             user_role = user_role
         )
+        user.is_verified = True
         user.is_admin = True
         user.is_superuser = True
         user.is_staff = True
@@ -65,6 +66,7 @@ class Account(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(max_length=100)
     user_role = models.CharField(max_length=100)
     phone = models.CharField(max_length=10)
+    is_verified = models.BooleanField(default=False)
     date_joined = models.DateTimeField(verbose_name="date joined", auto_now_add=True)
     last_login = models.DateTimeField(verbose_name="last login", auto_now=True)
     is_admin = models.BooleanField(default=False)

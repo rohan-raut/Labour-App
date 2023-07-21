@@ -38,12 +38,22 @@ def registration_view(request):
             data['last_name'] = account.last_name
             data['user_role'] = account.user_role
             data['phone'] = account.phone
+            data['is_verified'] = account.is_verified
             token = Token.objects.get(user=account).key
             data['token'] = token
         else:
             data = serializer.errors
         return Response(data)
-    
+
+
+@api_view(['GET'])
+def verify_user_view(request, pk):
+    data = {}
+    user = Token.objects.get(key=pk).user
+    user.is_verified = True
+    user.save()
+    data['response'] = "Successfully verified the user."
+    return Response(data) 
 
 
 @api_view(['POST',])
