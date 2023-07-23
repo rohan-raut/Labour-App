@@ -21,6 +21,22 @@ sender_email = "hayamedotmy@gmail.com"
 sender_name = "Hayame Admin"
 password = "dnndjbtorrxpyowx"
 
+def send_notification(receiver_email, subject, body):
+    try:
+        smtpObj = smtplib.SMTP(host='smtp.gmail.com', port=587)
+        smtpObj.starttls()
+        smtpObj.login(sender_email, password)
+        message = MIMEMultipart()
+        message["From"] = sender_name
+        message["To"] = receiver_email
+        message["Subject"] = subject
+        message.attach(MIMEText(body, "plain"))
+        text = message.as_string()
+        smtpObj.sendmail(sender_email, receiver_email, text)
+        return True
+    except smtplib.SMTPException:
+        return False
+
 
 # Get and Post Views
 
@@ -41,6 +57,13 @@ def registration_view(request):
             data['is_verified'] = account.is_verified
             token = Token.objects.get(user=account).key
             data['token'] = token
+
+            # send verification email
+            receiver_email = account.email
+            subject = "Hayame: Email Verification"
+            body = "Hello " + account.first_name + ",\nPlease click on the given link to verify your email address.\nLink: http://hayame.my/verify-user/" + token
+            notification = send_notification(receiver_email, subject, body)
+
         else:
             data = serializer.errors
         return Response(data)
@@ -176,23 +199,16 @@ def send_email_view(request):
     body = request.data['body']
     data = {}
 
-    try:
-        smtpObj = smtplib.SMTP(host='smtp.gmail.com', port=587)
-        smtpObj.starttls()
-        smtpObj.login(sender_email, password)
-        message = MIMEMultipart()
-        message["From"] = sender_name
-        message["To"] = receiver_email
-        message["Subject"] = subject
-        message.attach(MIMEText(body, "plain"))
-        text = message.as_string()
-        smtpObj.sendmail(sender_email, receiver_email, text)
-        smtpObj.close()
+    if(send_notification(receiver_email, subject, body) == True):
         data['response'] = "Successfully sent email"
-    except smtplib.SMTPException:
+    else:
         data['response'] = "Error: unable to send email"
     
     return Response(data)
+
+        
+    
+    
     
 
 # Update Views
