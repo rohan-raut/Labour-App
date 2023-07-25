@@ -2,10 +2,10 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from api_services.models import Account, Skill, Labour, Booking, Payment
-from api_services.serializers import AccountSerializer, SkillSerializer, LabourSerializer, BookingSerializer
+from api_services.models import Account, Skill, Labour, Booking, Payment, LaboursAllocated
+from api_services.serializers import AccountSerializer, SkillSerializer, LabourSerializer, BookingSerializer, LaboursAllocatedSerializer
 from rest_framework.authtoken.models import Token
-from api_services.filters import SkillFilter, BookingFilter, LabourFilter
+from api_services.filters import SkillFilter, BookingFilter, LabourFilter, LaboursAllocatedFilter
 from django.contrib.auth import authenticate
 import smtplib
 import ssl
@@ -61,7 +61,7 @@ def registration_view(request):
             # send verification email
             receiver_email = account.email
             subject = "Hayame: Email Verification"
-            body = "Hello " + account.first_name + ",\nPlease click on the given link to verify your email address.\nLink: http://hayame.my/verify-user/" + token
+            body = "Hello " + account.first_name + ",\nPlease click on the given link to verify your email address.\nLink: http://hayame.my/verify-user?user=" + token
             notification = send_notification(receiver_email, subject, body)
 
         else:
@@ -158,6 +158,26 @@ def booking_view(request):
 
     elif request.method == 'POST':
         serializer = BookingSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+@api_view(['GET', 'POST'])
+@permission_classes((IsAuthenticated,))
+def labour_allocation_view(request):
+
+    if request.method == 'GET':
+        snippets = LaboursAllocated.objects.all()
+        filterset = LaboursAllocatedFilter(request.GET, queryset=snippets)
+        if filterset.is_valid():
+            snippets = filterset.qs
+        serializer = LaboursAllocatedSerializer(snippets, many=True)   
+        return Response(serializer.data)
+
+    elif request.method == 'POST':
+        serializer = LaboursAllocatedSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)

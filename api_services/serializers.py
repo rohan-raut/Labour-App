@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api_services.models import Account, Skill, Labour, Booking, Payment
+from api_services.models import Account, Skill, Labour, Booking, Payment, LaboursAllocated
 
 
 class SkillSerializer(serializers.ModelSerializer):
@@ -19,6 +19,13 @@ class BookingSerializer(serializers.ModelSerializer):
         model = Booking
         fields = ['booking_id', 'contractor_name', 'contractor_email', 'labour_skill', 'labour_count', 'start_date', 'end_date', 'start_time', 'end_time', 'location', 'status', 'amount']
         read_only_fields = ['booking_id']
+
+
+class LaboursAllocatedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LaboursAllocated
+        fields = ['allocation_id', 'booking_id', 'labour_email']
+        read_only_fields = ['allocation_id']
 
 
 

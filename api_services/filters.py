@@ -1,5 +1,5 @@
 import django_filters
-from api_services.models import Booking, Skill, Labour
+from api_services.models import Booking, Skill, Labour, LaboursAllocated
 
 
 class SkillFilter(django_filters.FilterSet):
@@ -18,3 +18,9 @@ class LabourFilter(django_filters.FilterSet):
     class Meta:
         model = Labour
         fields = ['email']
+
+
+class LaboursAllocatedFilter(django_filters.FilterSet):
+    class Meta:
+        model = LaboursAllocated
+        fields = ['allocation_id', 'booking_id', 'labour_email']

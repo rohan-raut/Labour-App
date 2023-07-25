@@ -128,6 +128,12 @@ class Payment(models.Model):
     amount = models.IntegerField()
     status = models.CharField(max_length=100)
 
+
+class LaboursAllocated(models.Model):
+    allocation_id = models.AutoField(primary_key=True)
+    booking_id = models.ForeignKey(Booking, on_delete=models.CASCADE)
+    labour_email = models.EmailField()
+
  
 # Token generation while user is registered
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
