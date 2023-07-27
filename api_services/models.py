@@ -94,13 +94,15 @@ class Account(AbstractBaseUser, PermissionsMixin):
 class Skill(models.Model):
     skill = models.CharField(max_length=100, primary_key=True)
     count = models.IntegerField()
-    cost_per_hour = models.IntegerField()
+    cost_per_hour_normal_days = models.IntegerField()
+    cost_per_hour_public_holiday = models.IntegerField()
 
 
 class Labour(models.Model):
     first_name = models.CharField(max_length=500)
     last_name = models.CharField(max_length=500)
     email = models.EmailField(primary_key=True)
+    gender = models.CharField(max_length=100)
     skills = models.CharField(max_length=1000)
     phone = models.CharField(max_length=10)
     passport_no = models.CharField(max_length=100)
@@ -133,6 +135,11 @@ class LaboursAllocated(models.Model):
     allocation_id = models.AutoField(primary_key=True)
     booking_id = models.ForeignKey(Booking, on_delete=models.CASCADE)
     labour_email = models.EmailField()
+
+
+class PublicHolidays(models.Model):
+    event = models.CharField(max_length=1000)
+    date = models.DateField()
 
  
 # Token generation while user is registered

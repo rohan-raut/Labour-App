@@ -2,8 +2,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from api_services.models import Account, Skill, Labour, Booking, Payment, LaboursAllocated
-from api_services.serializers import AccountSerializer, SkillSerializer, LabourSerializer, BookingSerializer, LaboursAllocatedSerializer
+from api_services.models import Account, Skill, Labour, Booking, Payment, LaboursAllocated, PublicHolidays
+from api_services.serializers import AccountSerializer, SkillSerializer, LabourSerializer, BookingSerializer, LaboursAllocatedSerializer, PublicHolidaysSerializer
 from rest_framework.authtoken.models import Token
 from api_services.filters import SkillFilter, BookingFilter, LabourFilter, LaboursAllocatedFilter
 from django.contrib.auth import authenticate
@@ -164,6 +164,15 @@ def booking_view(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def public_holidays_view(request):
+    if request.method == 'GET':
+        snippets = PublicHolidays.objects.all()
+        serializer = PublicHolidaysSerializer(snippets, many=True)   
+        return Response(serializer.data)
+    
+
 @api_view(['GET', 'POST'])
 @permission_classes((IsAuthenticated,))
 def labour_allocation_view(request):
@@ -177,11 +186,18 @@ def labour_allocation_view(request):
         return Response(serializer.data)
 
     elif request.method == 'POST':
-        serializer = LaboursAllocatedSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        booking_obj = Booking.objects.get(booking_id=request.data['booking_id'])
+        booking_obj.status = "Complete"
+        booking_obj.save()
+        labour_emails = request.data['labour_email']
+        labour_emails = labour_emails.split(',')
+        for email in labour_emails:
+            obj = LaboursAllocated(booking_id=request.data['booking_id'], labour_email=email)
+            obj.save()
+
+        data = {}
+        data['response'] = "Data saved successfully."
+        return Response(data)
 
   
 @api_view(['POST'])

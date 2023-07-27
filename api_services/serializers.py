@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api_services.models import Account, Skill, Labour, Booking, Payment, LaboursAllocated
+from api_services.models import Account, Skill, Labour, Booking, Payment, LaboursAllocated, PublicHolidays
 
 
 class SkillSerializer(serializers.ModelSerializer):
@@ -28,6 +28,11 @@ class LaboursAllocatedSerializer(serializers.ModelSerializer):
         read_only_fields = ['allocation_id']
 
 
+class PublicHolidaysSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PublicHolidays
+        fields = ['event', 'date']
+        
 
 class AccountSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)

@@ -103,7 +103,7 @@ WSGI_APPLICATION = 'LabourApp.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'LabourApp',
+        'NAME': 'HayameDB',
         'USER': 'postgres',
         'PASSWORD': 'H@yame987',
         'HOST': '45.127.4.151',
@@ -152,10 +152,5 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-CORS_ALLOWED_ORIGINS = [
-    'http://127.0.0.1:5500',
-    'http://127.0.0.1:5173',
-]
 
 CORS_ORIGIN_ALLOW_ALL = True
