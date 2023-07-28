@@ -71,6 +71,7 @@ def registration_view(request):
 
 @api_view(['GET'])
 def verify_user_view(request, pk):
+    # pk is token of user
     data = {}
     user = Token.objects.get(key=pk).user
     user.is_verified = True
@@ -222,6 +223,46 @@ def change_password_view(request):
     else:
         data['response'] = "Passwords should match."
     
+    return Response(data)
+
+
+@api_view(['POST'])
+def forgot_password_view(request):
+    # fields: email
+    email = request.data['email']
+    user = Account.objects.filter(email=email).exists()
+
+    data = {}
+    if(user == True):
+        user = Account.objects.get(email=email)
+        token = Token.objects.get(user=user).key
+        data["response"] = "Password reset link sent on your email."
+        data["token"] = token
+        subject = "Hayame: Password Reset Link."
+        body = "Hello " + user.first_name + ",\nThis is your password reset link.\nLink: http://hayame.my/reset-password/" + token
+        send_notification(receiver_email=email, subject=subject, body=body)
+    else:
+        data["response"] = "User with the given email does not exists. Please try to Register."
+    
+    return Response(data)
+
+
+@api_view(['POST'])
+def reset_password_view(request, pk):
+    # pk is user's token
+    # fields: password, change_password
+    password = request.data['password']
+    confirm_password = request.data['confirm_password']
+    
+    data = {}
+    if(password != confirm_password):
+        data['response'] = "Password does not match."
+    else:
+        user = Token.objects.get(key=pk).user
+        user.set_password(password)
+        user.save()
+        data['response'] = "Password changed successfully."
+
     return Response(data)
 
 
