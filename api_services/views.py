@@ -239,7 +239,7 @@ def forgot_password_view(request):
         data["response"] = "Password reset link sent on your email."
         data["token"] = token
         subject = "Hayame: Password Reset Link."
-        body = "Hello " + user.first_name + ",\nThis is your password reset link.\nLink: http://hayame.my/reset-password/" + token
+        body = "Hello " + user.first_name + ",\nThis is your password reset link.\nLink: http://hayame.my/reset-password?user=" + token
         send_notification(receiver_email=email, subject=subject, body=body)
     else:
         data["response"] = "User with the given email does not exists. Please try to Register."
