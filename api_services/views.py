@@ -193,7 +193,7 @@ def labour_allocation_view(request):
         labour_emails = request.data['labour_email']
         labour_emails = labour_emails.split(',')
         for email in labour_emails:
-            obj = LaboursAllocated(booking_id=request.data['booking_id'], labour_email=email)
+            obj = LaboursAllocated(booking_id=booking_obj, labour_email=email)
             obj.save()
 
         data = {}

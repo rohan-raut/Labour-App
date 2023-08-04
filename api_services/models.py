@@ -9,6 +9,13 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
+
+gender_choice = (
+    ("Male", "Male"),
+    ("Female", "Female")
+)
+
+
 # Create your models here.
 
 class MyAccountManager(BaseUserManager):
@@ -102,7 +109,7 @@ class Labour(models.Model):
     first_name = models.CharField(max_length=500)
     last_name = models.CharField(max_length=500)
     email = models.EmailField(primary_key=True)
-    gender = models.CharField(max_length=100)
+    gender = models.CharField(max_length=100, choices=gender_choice)
     skills = models.CharField(max_length=1000)
     phone = models.CharField(max_length=10)
     passport_no = models.CharField(max_length=100)
