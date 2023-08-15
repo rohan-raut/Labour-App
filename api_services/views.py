@@ -284,6 +284,24 @@ def send_email_view(request):
     return Response(data)
 
         
+
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def report_view(request):
+
+    data = {}
+    labours_allocated = LaboursAllocated.objects.all()
+    for labour_allocate in labours_allocated:
+        booking_obj = labour_allocate.booking_id
+        data['labour_email'] = labour_allocate.labour_email
+        data['booking_id'] = booking_obj.booking_id
+        data['location'] = booking_obj.location
+        data['contractor_name'] = booking_obj.contractor_name
+        data['start_date'] = booking_obj.start_date
+        data['end_date'] = booking_obj.end_date
+        data['amount'] = (booking_obj.amount / booking_obj.labour_count)
+
+    return Response(data)
     
     
     
