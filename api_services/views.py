@@ -288,18 +288,30 @@ def send_email_view(request):
 @api_view(['GET'])
 @permission_classes((IsAuthenticated,))
 def report_view(request):
-
+    months = ['Jan', 'Feb', 'Mar', 'April', 'May', 'Jun', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec']
     data = {}
     labours_allocated = LaboursAllocated.objects.all()
     for labour_allocate in labours_allocated:
         booking_obj = labour_allocate.booking_id
-        data['labour_email'] = labour_allocate.labour_email
-        data['booking_id'] = booking_obj.booking_id
-        data['location'] = booking_obj.location
-        data['contractor_name'] = booking_obj.contractor_name
-        data['start_date'] = booking_obj.start_date
-        data['end_date'] = booking_obj.end_date
-        data['amount'] = (booking_obj.amount / booking_obj.labour_count)
+        obj = {}
+        obj['labour_email'] = labour_allocate.labour_email
+        obj['booking_id'] = booking_obj.booking_id
+        obj['location'] = booking_obj.location
+        obj['contractor_name'] = booking_obj.contractor_name
+        obj['contractor_email'] = booking_obj.contractor_email
+        obj['labour_skill'] = booking_obj.labour_skill
+        obj['labour_count'] = booking_obj.labour_count
+        obj['start_time'] = booking_obj.start_time
+        obj['end_time'] = booking_obj.end_time
+        obj['start_date'] = booking_obj.start_date
+        obj['end_date'] = booking_obj.end_date
+        obj['amount'] = (booking_obj.amount / booking_obj.labour_count)
+        mon = booking_obj.end_date.month - 1
+        year = booking_obj.end_date.year
+        key = (months[mon] + ' ' + str(year))
+        if key not in data:
+            data[key] = []
+        data[key].append(obj)
 
     return Response(data)
     
