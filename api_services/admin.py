@@ -3,7 +3,7 @@ from api_services.models import Account, Skill, Labour, Booking, Payment, Labour
 
 # Register your models here.
 
-# admin.site.register(Account)
+admin.site.register(Account)
 admin.site.register(Skill)
 # admin.site.register(Labour)
 # admin.site.register(Booking)

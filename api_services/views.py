@@ -195,6 +195,10 @@ def labour_allocation_view(request):
         for email in labour_emails:
             obj = LaboursAllocated(booking_id=booking_obj, labour_email=email)
             obj.save()
+            contractor_obj = Account.objects.get(email=booking_obj.contractor_email)
+            subject = "Hayame: New Work Allocated"
+            body = "Details of the new work:" + "\nContractor Name: " + str(booking_obj.contractor_name) + "\nContractor Phone: " + str(contractor_obj.phone) + "\nStart Date: " + str(booking_obj.start_date) + "\nEnd Date: " + str(booking_obj.end_date) + "\nStart Time: " + str(booking_obj.start_time) + "\nEnd Time: " + str(booking_obj.end_time) + "\nLocation: " + str(booking_obj.location) 
+            send_notification(email, subject, body)
 
         data = {}
         data['response'] = "Data saved successfully."

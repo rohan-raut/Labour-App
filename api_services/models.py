@@ -72,7 +72,7 @@ class Account(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     user_role = models.CharField(max_length=100)
-    phone = models.CharField(max_length=10)
+    phone = models.CharField(max_length=20)
     is_verified = models.BooleanField(default=False)
     date_joined = models.DateTimeField(verbose_name="date joined", auto_now_add=True)
     last_login = models.DateTimeField(verbose_name="last login", auto_now=True)
