@@ -15,6 +15,11 @@ gender_choice = (
     ("Female", "Female")
 )
 
+labour_category = (
+    ("General Workers", "General Workers"),
+    ("Skilled Workers", "Skilled Workers")
+)
+
 
 # Create your models here.
 
@@ -99,6 +104,7 @@ class Account(AbstractBaseUser, PermissionsMixin):
 
 # Model for Labour
 class Skill(models.Model):
+    category = models.CharField(max_length=50, choices=labour_category, default="General Workers")
     skill = models.CharField(max_length=100, primary_key=True)
     count = models.IntegerField()
     cost_per_hour_normal_days = models.IntegerField()

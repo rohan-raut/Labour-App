@@ -5,7 +5,7 @@ from api_services.models import Booking, Skill, Labour, LaboursAllocated
 class SkillFilter(django_filters.FilterSet):
     class Meta:
         model = Skill
-        fields = ['skill']
+        fields = ['skill', 'category']
 
 
 class BookingFilter(django_filters.FilterSet):
