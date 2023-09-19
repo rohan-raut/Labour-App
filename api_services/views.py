@@ -2,8 +2,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from api_services.models import Account, Skill, Labour, Booking, Payment, LaboursAllocated, PublicHolidays
-from api_services.serializers import AccountSerializer, SkillSerializer, LabourSerializer, BookingSerializer, LaboursAllocatedSerializer, PublicHolidaysSerializer
+from api_services.models import Account, Skill, Labour, Booking, Payment, LaboursAllocated, PublicHoliday
+from api_services.serializers import AccountSerializer, SkillSerializer, LabourSerializer, BookingSerializer, LaboursAllocatedSerializer, PublicHolidaySerializer
 from rest_framework.authtoken.models import Token
 from api_services.filters import SkillFilter, BookingFilter, LabourFilter, LaboursAllocatedFilter
 from django.contrib.auth import authenticate
@@ -169,8 +169,8 @@ def booking_view(request):
 @permission_classes((IsAuthenticated,))
 def public_holidays_view(request):
     if request.method == 'GET':
-        snippets = PublicHolidays.objects.all()
-        serializer = PublicHolidaysSerializer(snippets, many=True)   
+        snippets = PublicHoliday.objects.all()
+        serializer = PublicHolidaySerializer(snippets, many=True)   
         return Response(serializer.data)
     
 

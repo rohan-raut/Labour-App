@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api_services.models import Account, Skill, Labour, Booking, Payment, LaboursAllocated, PublicHolidays
+from api_services.models import Account, Skill, Labour, Booking, Payment, LaboursAllocated, PublicHoliday
 
 
 class SkillSerializer(serializers.ModelSerializer):
@@ -28,9 +28,9 @@ class LaboursAllocatedSerializer(serializers.ModelSerializer):
         read_only_fields = ['allocation_id']
 
 
-class PublicHolidaysSerializer(serializers.ModelSerializer):
+class PublicHolidaySerializer(serializers.ModelSerializer):
     class Meta:
-        model = PublicHolidays
+        model = PublicHoliday
         fields = ['event', 'date']
         
 

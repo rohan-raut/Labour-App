@@ -9,6 +9,10 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
+user_role_choice = (
+    ("Admin", "Admin"),
+    ("Contractor", "Contractor")
+)
 
 gender_choice = (
     ("Male", "Male"),
@@ -24,7 +28,7 @@ labour_category = (
 # Create your models here.
 
 class MyAccountManager(BaseUserManager):
-    def create_user(self, email, username, first_name, last_name, user_role, phone, password=None):
+    def create_user(self, email, username, first_name, last_name, phone, password=None):
         if not email:
             raise ValueError("User must have an email address")
         if not username:
@@ -33,8 +37,6 @@ class MyAccountManager(BaseUserManager):
             raise ValueError("User must have a first name")
         if not last_name:
             raise ValueError("User must have a last name")
-        if not user_role:
-            raise ValueError("User must have a role defined")
         if not phone:
             raise ValueError("User must have a phone number")
 
@@ -44,7 +46,7 @@ class MyAccountManager(BaseUserManager):
             first_name = first_name,
             last_name = last_name,
             phone = phone,
-            user_role = user_role
+            user_role = "Contractor"
         )
 
         user.set_password(password)
@@ -52,7 +54,7 @@ class MyAccountManager(BaseUserManager):
         return user
 
     
-    def create_superuser(self, email, username, first_name, last_name, user_role, phone, password):
+    def create_superuser(self, email, username, first_name, last_name, phone, password):
         user = self.create_user(
             email = email,
             username = username,
@@ -60,8 +62,8 @@ class MyAccountManager(BaseUserManager):
             phone = phone,
             first_name = first_name,
             last_name = last_name,
-            user_role = user_role
         )
+        user.user_role = "Admin"
         user.is_verified = True
         user.is_admin = True
         user.is_superuser = True
@@ -72,11 +74,12 @@ class MyAccountManager(BaseUserManager):
 
 
 class Account(AbstractBaseUser, PermissionsMixin):
+    user_id = models.AutoField(primary_key=True)
     email = models.EmailField(verbose_name="email", max_length=254, unique=True)
     username = models.CharField(max_length=100, unique=True)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
-    user_role = models.CharField(max_length=100)
+    user_role = models.CharField(max_length=50, choices=user_role_choice)
     phone = models.CharField(max_length=20)
     is_verified = models.BooleanField(default=False)
     date_joined = models.DateTimeField(verbose_name="date joined", auto_now_add=True)
@@ -87,7 +90,7 @@ class Account(AbstractBaseUser, PermissionsMixin):
     is_superuser = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["username", "first_name", "last_name", "user_role", "phone"]
+    REQUIRED_FIELDS = ["username", "first_name", "last_name", "phone"]
 
     objects = MyAccountManager()
 
@@ -102,7 +105,6 @@ class Account(AbstractBaseUser, PermissionsMixin):
 
 
 
-# Model for Labour
 class Skill(models.Model):
     category = models.CharField(max_length=50, choices=labour_category, default="General Workers")
     skill = models.CharField(max_length=100, primary_key=True)
@@ -110,13 +112,17 @@ class Skill(models.Model):
     cost_per_hour_normal_days = models.IntegerField()
     cost_per_hour_public_holiday = models.IntegerField()
 
+    def __str__(self):
+        return self.skill
+
 
 class Labour(models.Model):
+    labour_id = models.AutoField(primary_key=True)
     first_name = models.CharField(max_length=500)
     last_name = models.CharField(max_length=500)
-    email = models.EmailField(primary_key=True)
-    gender = models.CharField(max_length=100, choices=gender_choice)
-    skills = models.CharField(max_length=1000)
+    email = models.EmailField(max_length=500)
+    gender = models.CharField(max_length=50, choices=gender_choice)
+    skill = models.ForeignKey(Skill, on_delete=models.CASCADE)
     phone = models.CharField(max_length=10)
     passport_no = models.CharField(max_length=100)
 
@@ -148,10 +154,10 @@ class Payment(models.Model):
 class LaboursAllocated(models.Model):
     allocation_id = models.AutoField(primary_key=True)
     booking_id = models.ForeignKey(Booking, on_delete=models.CASCADE)
-    labour_email = models.EmailField()
+    labour_id = models.ForeignKey(Labour, on_delete=models.PROTECT)
 
 
-class PublicHolidays(models.Model):
+class PublicHoliday(models.Model):
     event = models.CharField(max_length=1000)
     date = models.DateField()
 

@@ -23,4 +23,4 @@ class LabourFilter(django_filters.FilterSet):
 class LaboursAllocatedFilter(django_filters.FilterSet):
     class Meta:
         model = LaboursAllocated
-        fields = ['allocation_id', 'booking_id', 'labour_email']
+        fields = ['allocation_id', 'booking_id', 'labour_id']

@@ -103,7 +103,7 @@ WSGI_APPLICATION = 'LabourApp.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'HayameDB',
+        'NAME': 'HayameTest',
         'USER': 'postgres',
         'PASSWORD': 'H@yame987',
         'HOST': '45.127.4.151',
