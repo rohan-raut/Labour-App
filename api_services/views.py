@@ -14,6 +14,8 @@ from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import googlemaps
+import datetime
 
 global sender_email, sender_name, password
 
@@ -41,6 +43,26 @@ def send_notification(receiver_email, subject, body):
 # Get and Post Views
 
 @api_view(['POST'])
+def login_view(request):
+    username = request.data['username']
+    password = request.data['password']
+    user = authenticate(request, username=username, password=password)
+    data = {}
+    if user is not None:
+        if user.is_verified == False:
+            data['response'] = "Please verify your email before login."
+            data['is_logged_in'] = False
+        else:
+            data['response'] = "Login Successful"
+            data['token'] = Token.objects.get(user=user).key
+            data['is_logged_in'] = True
+    else:
+        data['response'] = "Wrong Credentials. Please try again."
+        data['is_logged_in'] = False
+    return Response(data)        
+
+
+@api_view(['POST'])
 def registration_view(request):
     if request.method == 'POST':
         serializer = AccountSerializer(data=request.data)
@@ -48,11 +70,12 @@ def registration_view(request):
         if serializer.is_valid():
             account = serializer.save()
 
-            data['response'] = 'Successfully registered a new user.'
+            data['response'] = 'Successfully Registered. Verify your email before login.'
+            data['success'] = True
             data['email'] = account.email
             data['first_name'] = account.first_name
             data['last_name'] = account.last_name
-            data['user_role'] = account.user_role
+            data['user_role'] = "Contractor"
             data['phone'] = account.phone
             data['is_verified'] = account.is_verified
             token = Token.objects.get(user=account).key
@@ -66,6 +89,8 @@ def registration_view(request):
 
         else:
             data = serializer.errors
+            data['response'] = "Account with this email already exists. Try to Login."
+            data['success'] = False
         return Response(data)
 
 
@@ -80,21 +105,19 @@ def verify_user_view(request, pk):
     return Response(data) 
 
 
-@api_view(['POST',])
+@api_view(['GET',])
 @permission_classes((IsAuthenticated,))
 def user_info(request):
-    if request.method == "POST":
-        username = request.data['username']
-        password = request.data['password']  
-
-        user = authenticate(request, email=username, password=password)
+    if request.method == "GET":
         data = {}
-        if user is not None:
-            serializer = AccountSerializer(user)
-            return Response(serializer.data)
-        else:
-            data['response'] = 'Wrong credentials.'
-            return Response(data)
+        data['user_id'] = request.user.user_id
+        data['first_name'] = request.user.first_name
+        data['last_name'] = request.user.last_name
+        data['email'] = request.user.email
+        data['user_role'] = request.user.user_role
+        data['phone'] = request.user.phone
+        data['is_verified'] = request.user.is_verified
+        return Response(data)
     
 
 @api_view(['GET', 'POST'])
@@ -121,6 +144,9 @@ def skill_list(request):
 @permission_classes((IsAuthenticated,))
 def labour_list(request):
 
+    if request.user.user_role != "Admin":
+        return Response({'response': 'You cannot access this information'})
+
     if request.method == 'GET':
         snippets = Labour.objects.all()
         filterset = LabourFilter(request.GET, queryset=snippets)
@@ -130,27 +156,114 @@ def labour_list(request):
         return Response(serializer.data)
 
     elif request.method == 'POST':
-        serializer = LabourSerializer(data=request.data)
-        if serializer.is_valid():
-            labour = serializer.save()
+        first_name = request.data['first_name']
+        last_name = request.data['last_name']
+        email = request.data['email']
+        gender = request.data['gender']
+        phone = request.data['phone']
+        skills = request.data['skills']
+        passport_no = request.data['passport_no']
 
-            # populate the labour table based on skills
-            skillList = (labour.skills).split(',')
-            for skill in skillList:
-                skill_obj = Skill.objects.get(skill=skill)
-                skill_obj.count = skill_obj.count + 1
-                skill_obj.save()
-            
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+        skill_list = skills.split(',')
+        for skill in skill_list:
+            skill_obj = Skill.objects.get(skill=skill)
+            skill_obj.count = skill_obj.count + 1
+            skill_obj.save()
+            labour_obj = Labour(first_name=first_name, last_name=last_name, email=email, gender=gender, phone=phone, passport_no=passport_no, skill=skill_obj)
+            labour_obj.save()
+
+        return Response({'response': 'Labour Added Successfully'})
+
+
+@api_view(['POST'])
+@permission_classes((IsAuthenticated,))
+def booking_preview(request):
+    job_location = request.data['job_location']
+    labour_skill = request.data['labour_skill']
+    labour_count = int(request.data['labour_count'])
+    labour_gender = request.data['labour_gender']
+    start_date = str(request.data['start_date'])
+    end_date = str(request.data['end_date'])
+    start_time = request.data['start_time']
+    end_time = request.data['end_time']
+
+    start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d').date()
+    end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
+
+    skill_obj = Skill.objects.get(skill=labour_skill)
+    total_days = (end_date - start_date).days + 1
+
+    public_holidays = 0
+    public_holidays_obj = PublicHoliday.objects.all()
+    for obj in public_holidays_obj:
+        if(obj.date >= start_date and obj.date <= end_date):
+            public_holidays += 1
+
+    total_days -= public_holidays
+
+    hour = start_time[0] + start_time[1]
+    minutes = start_time[3] + start_time[4]
+    start_time = datetime.datetime(2023, 6, 3, int(hour), int(minutes), 00)
+    hour = end_time[0] + end_time[1]
+    minutes = end_time[3] + end_time[4]
+    end_time = datetime.datetime(2023, 6, 3, int(hour), int(minutes), 00)
+    time_diff = end_time - start_time
+    total_minutes_one_day = time_diff.total_seconds() / 60
+
+    cost_per_min_normal_day = skill_obj.cost_per_hour_normal_days / 60
+    cost_per_min_public_holiday = skill_obj.cost_per_hour_public_holiday / 60
+
+    gmaps = googlemaps.Client(key='AIzaSyDECJ4Zx4x_Iz5iRSTCvewjuDcaCNmz6l8')
+    try:
+        my_dist = gmaps.distance_matrix(origins='Persiaran Bukit Raja, Kawasan 17 Bandar Baru Klang, 41150 Klang, Selangor', destinations=job_location, mode="driving", units="metric")['rows'][0]['elements'][0]['distance']['value']
+        my_dist = my_dist/1000
+    except:
+        return Response({
+            'success': False,
+            'response': 'Invalid Job Location'
+        })
+
+    cars = int((labour_count + 3) / 4)
+    transportation_cost = my_dist * 1.5 * cars
+    transportation_cost = round(transportation_cost)
+    total_cost = (total_days * total_minutes_one_day * cost_per_min_normal_day * labour_count) + (public_holidays * total_minutes_one_day * cost_per_min_public_holiday * labour_count) + transportation_cost
+
+    data = {}
+    data['job_location'] = job_location
+    data['labour_skill'] = labour_skill
+    data['labour_count'] = labour_count
+    data['labour_gender'] = labour_gender
+    data['start_date'] = start_date
+    data['end_date'] = end_date
+    data['start_time'] = request.data['start_time']
+    data['end_time'] = request.data['end_time']
+    data['hours'] = int((total_minutes_one_day * (public_holidays + total_days) * labour_count) / 60)
+    data['mins'] = int((total_minutes_one_day * (public_holidays + total_days) * labour_count) % 60)
+    data['public_holidays'] = public_holidays
+    data['cost_per_hour_normal_days'] = skill_obj.cost_per_hour_normal_days
+    data['cost_per_hour_public_holiday'] = skill_obj.cost_per_hour_public_holiday
+    data['transportation_cost'] = transportation_cost
+    data['distance'] = my_dist
+    data['cars'] = cars
+    data['total_cost'] = total_cost
+    data['success'] = True
+
+    return Response(data)
+     
 
 @api_view(['GET', 'POST'])
 @permission_classes((IsAuthenticated,))
 def booking_view(request):
 
     if request.method == 'GET':
-        snippets = Booking.objects.all()
+        if request.user.user_role == 'Admin':
+            snippets = Booking.objects.all()
+        else:
+            snippets = Booking.objects.filter(contractor_email=request.user.email)
+
+        if request.user.user_role == "Contractor":
+            snippets = Booking.objects.filter(contractor_email=request.user.email)
+
         filterset = BookingFilter(request.GET, queryset=snippets)
         if filterset.is_valid():
             snippets = filterset.qs
@@ -158,16 +271,35 @@ def booking_view(request):
         return Response(serializer.data)
 
     elif request.method == 'POST':
-        serializer = BookingSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        contractor_name = request.user.first_name + ' ' + request.user.last_name
+        contractor_email = request.user.email
+        labour_skill = request.data['labour_skill']
+        labour_count = request.data['labour_count']
+        labour_gender = request.data['labour_gender']
+        start_date = request.data['start_date']
+        end_date = request.data['end_date']
+        start_time = request.data['start_time']
+        end_time = request.data['end_time']
+        location = request.data['location']
+        status = 'Pending'
+        amount = request.data['amount']
+
+        booking_obj = Booking(contractor_name=contractor_name, contractor_email=contractor_email, labour_skill=labour_skill, labour_count=labour_count, labour_gender=labour_gender, start_date=start_date, end_date=end_date, start_time=start_time, end_time=end_time, location=location, status=status, amount=amount)
+        booking_obj.save()
+
+        data = {}
+        data['success'] = True
+        data['response'] = 'Booking Done'
+        return Response(data)
     
 
 @api_view(['GET'])
 @permission_classes((IsAuthenticated,))
 def public_holidays_view(request):
+
+    if request.user.user_role != "Admin":
+        return Response({'response': 'You cannot access this information'})
+    
     if request.method == 'GET':
         snippets = PublicHoliday.objects.all()
         serializer = PublicHolidaySerializer(snippets, many=True)   
@@ -177,6 +309,9 @@ def public_holidays_view(request):
 @api_view(['GET', 'POST'])
 @permission_classes((IsAuthenticated,))
 def labour_allocation_view(request):
+
+    if request.user.user_role != "Admin":
+        return Response({'response': 'You cannot access this information'})
 
     if request.method == 'GET':
         snippets = LaboursAllocated.objects.all()
@@ -190,15 +325,16 @@ def labour_allocation_view(request):
         booking_obj = Booking.objects.get(booking_id=request.data['booking_id'])
         booking_obj.status = "Complete"
         booking_obj.save()
-        labour_emails = request.data['labour_email']
-        labour_emails = labour_emails.split(',')
-        for email in labour_emails:
-            obj = LaboursAllocated(booking_id=booking_obj, labour_email=email)
+        print(request.data['labour_ids'])
+        labour_ids = request.data['labour_ids']
+        for id in labour_ids:
+            labour_obj = Labour.objects.get(labour_id=id)
+            obj = LaboursAllocated(booking_id=booking_obj, labour_id=labour_obj)
             obj.save()
             contractor_obj = Account.objects.get(email=booking_obj.contractor_email)
             subject = "Hayame: New Work Allocated"
             body = "Details of the new work:" + "\nContractor Name: " + str(booking_obj.contractor_name) + "\nContractor Phone: " + str(contractor_obj.phone) + "\nStart Date: " + str(booking_obj.start_date) + "\nEnd Date: " + str(booking_obj.end_date) + "\nStart Time: " + str(booking_obj.start_time) + "\nEnd Time: " + str(booking_obj.end_time) + "\nLocation: " + str(booking_obj.location) 
-            send_notification(email, subject, body)
+            # send_notification(labour_obj.email, subject, body)
 
         data = {}
         data['response'] = "Data saved successfully."
@@ -209,6 +345,7 @@ def labour_allocation_view(request):
 @permission_classes((IsAuthenticated,))
 def change_password_view(request):
     # fields: email, old_password, password, password2
+    # still not used in application
     email = request.data['email']
     old_password = request.data['old_password']
     password = request.data['password']
@@ -240,12 +377,14 @@ def forgot_password_view(request):
     if(user == True):
         user = Account.objects.get(email=email)
         token = Token.objects.get(user=user).key
+        data['success'] = True
         data["response"] = "Password reset link sent on your email."
         data["token"] = token
         subject = "Hayame: Password Reset Link."
         body = "Hello " + user.first_name + ",\nThis is your password reset link.\nLink: http://hayame.my/reset-password?user=" + token
         send_notification(receiver_email=email, subject=subject, body=body)
     else:
+        data['success'] = False
         data["response"] = "User with the given email does not exists. Please try to Register."
     
     return Response(data)
@@ -275,6 +414,9 @@ def reset_password_view(request, pk):
 def send_email_view(request):
     # fields: receiver_email, subject, body
 
+    if request.user.user_role != "Admin":
+        return Response({'response': 'You are not an Admin'})
+
     receiver_email = request.data['receiver_email']
     subject = request.data['subject']
     body = request.data['body']
@@ -297,6 +439,7 @@ def report_view(request):
     labours_allocated = LaboursAllocated.objects.all()
     for labour_allocate in labours_allocated:
         booking_obj = labour_allocate.booking_id
+        labour_obj = labour_allocate.labour_id
         start_time = str(booking_obj.start_time)
         end_time = str(booking_obj.end_time)
         hours = int(end_time[0] + end_time[1]) - int(start_time[0] + start_time[1])
@@ -305,7 +448,7 @@ def report_view(request):
             hours = str(hours) + ".5"
         days = (booking_obj.end_date - booking_obj.start_date).days + 1
         obj = {}
-        obj['labour_email'] = labour_allocate.labour_email
+        obj['labour_email'] = labour_obj.email
         obj['booking_id'] = booking_obj.booking_id
         obj['location'] = booking_obj.location
         obj['contractor_name'] = booking_obj.contractor_name
@@ -377,30 +520,34 @@ def update_skill_list(request, pk):
 def update_labour_list(request, pk):
 
     try:
-        labour = Labour.objects.get(email=pk)
+        labours = Labour.objects.filter(email=pk)
     except Labour.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'PUT': 
-        serializer = LabourSerializer(labour, data=request.data)   
-        data = {}
-        if serializer.is_valid():
-            skillList = (labour.skills).split(',')
-            for skill in skillList:
-                skill_obj = Skill.objects.get(skill=skill)
-                skill_obj.count = skill_obj.count - 1
-                skill_obj.save()
+        for labour in labours:
+            skill_obj = Skill.objects.get(skill=labour.skill)
+            skill_obj.count = skill_obj.count - 1
+            labour.delete()
 
-            labour = serializer.save()
-            skillList = (labour.skills).split(',')
-            for skill in skillList:
-                skill_obj = Skill.objects.get(skill=skill)
-                skill_obj.count = skill_obj.count + 1
-                skill_obj.save()
+        first_name = request.data['first_name']
+        last_name = request.data['last_name']
+        email = request.data['email']
+        gender = request.data['gender']
+        phone = request.data['phone']
+        skills = request.data['skills']
+        passport_no = request.data['passport_no']
 
-            data["success"] = "Update Successful."
-            return Response(data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        skill_list = skills.split(',')
+
+        for skill in skill_list:
+            skill_obj = Skill.objects.get(skill=skill)
+            skill_obj.count = skill_obj.count + 1
+            skill_obj.save()
+            labour_obj = Labour(first_name=first_name, last_name=last_name, email=email, gender=gender, phone=phone, passport_no=passport_no, skill=skill_obj)
+            labour_obj.save()
+
+        return Response({'response': 'Labour Details Updated'})
     
 
 
