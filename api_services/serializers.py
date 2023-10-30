@@ -5,7 +5,7 @@ from api_services.models import Account, Skill, Labour, Booking, Payment, Labour
 class SkillSerializer(serializers.ModelSerializer):
     class Meta:
         model = Skill
-        fields = ['category', 'skill', 'count', 'cost_per_hour_normal_days', 'cost_per_hour_public_holiday']
+        fields = ['category', 'skill', 'count', 'cost_per_hour_normal_days_less_than_four', 'cost_per_hour_normal_days_less_than_eight', 'cost_per_hour_normal_days_less_than_twelve', 'cost_per_hour_public_holiday_less_than_four', 'cost_per_hour_public_holiday_less_than_eight', 'cost_per_hour_public_holiday_less_than_twelve']
 
 
 class LabourSerializer(serializers.ModelSerializer):

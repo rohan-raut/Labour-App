@@ -108,9 +108,13 @@ class Account(AbstractBaseUser, PermissionsMixin):
 class Skill(models.Model):
     category = models.CharField(max_length=50, choices=labour_category, default="General Workers")
     skill = models.CharField(max_length=100, primary_key=True)
-    count = models.IntegerField()
-    cost_per_hour_normal_days = models.IntegerField()
-    cost_per_hour_public_holiday = models.IntegerField()
+    count = models.IntegerField(default=0)
+    cost_per_hour_normal_days_less_than_four = models.IntegerField(default=0)
+    cost_per_hour_normal_days_less_than_eight = models.IntegerField(default=0)
+    cost_per_hour_normal_days_less_than_twelve = models.IntegerField(default=0)
+    cost_per_hour_public_holiday_less_than_four = models.IntegerField(default=0)
+    cost_per_hour_public_holiday_less_than_eight = models.IntegerField(default=0)
+    cost_per_hour_public_holiday_less_than_twelve = models.IntegerField(default=0)
 
     def __str__(self):
         return self.skill

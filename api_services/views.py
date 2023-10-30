@@ -209,9 +209,14 @@ def booking_preview(request):
     end_time = datetime.datetime(2023, 6, 3, int(hour), int(minutes), 00)
     time_diff = end_time - start_time
     total_minutes_one_day = time_diff.total_seconds() / 60
+    total_hours_one_day = total_minutes_one_day / 60
 
-    cost_per_min_normal_day = skill_obj.cost_per_hour_normal_days / 60
-    cost_per_min_public_holiday = skill_obj.cost_per_hour_public_holiday / 60
+    cost_per_min_normal_day_less_than_four = skill_obj.cost_per_hour_normal_days_less_than_four / 60
+    cost_per_min_normal_day_less_than_eight = skill_obj.cost_per_hour_normal_days_less_than_eight / 60
+    cost_per_min_normal_day_less_than_twelve = skill_obj.cost_per_hour_normal_days_less_than_twelve / 60
+    cost_per_min_public_holiday_less_than_four = skill_obj.cost_per_hour_public_holiday_less_than_four / 60
+    cost_per_min_public_holiday_less_than_eight = skill_obj.cost_per_hour_public_holiday_less_than_eight / 60
+    cost_per_min_public_holiday_less_than_twelve = skill_obj.cost_per_hour_public_holiday_less_than_twelve / 60
 
     gmaps = googlemaps.Client(key='AIzaSyDECJ4Zx4x_Iz5iRSTCvewjuDcaCNmz6l8')
     try:
@@ -226,9 +231,28 @@ def booking_preview(request):
     cars = int((labour_count + 3) / 4)
     transportation_cost = my_dist * 1.5 * cars
     transportation_cost = round(transportation_cost)
-    total_cost = (total_days * total_minutes_one_day * cost_per_min_normal_day * labour_count) + (public_holidays * total_minutes_one_day * cost_per_min_public_holiday * labour_count) + transportation_cost
 
+    total_cost = 0
     data = {}
+
+    if(total_hours_one_day <= 4):
+        total_cost = total_days * total_minutes_one_day * cost_per_min_normal_day_less_than_four * labour_count
+        total_cost = transportation_cost + total_cost + (public_holidays * total_minutes_one_day * cost_per_min_public_holiday_less_than_four * labour_count)
+        data['cost_per_hour_normal_days'] = cost_per_min_normal_day_less_than_four * 60
+        data['cost_per_hour_public_holiday'] = cost_per_min_public_holiday_less_than_four * 60
+    elif(total_hours_one_day <= 8):
+        total_cost = total_days * total_minutes_one_day * cost_per_min_normal_day_less_than_eight * labour_count
+        total_cost = transportation_cost + total_cost + (public_holidays * total_minutes_one_day * cost_per_min_public_holiday_less_than_eight * labour_count)
+        data['cost_per_hour_normal_days'] = cost_per_min_normal_day_less_than_eight * 60
+        data['cost_per_hour_public_holiday'] = cost_per_min_public_holiday_less_than_eight * 60
+    else:
+        total_cost = total_days * total_minutes_one_day * cost_per_min_normal_day_less_than_twelve * labour_count
+        total_cost = transportation_cost + total_cost + (public_holidays * total_minutes_one_day * cost_per_min_public_holiday_less_than_twelve * labour_count)
+        data['cost_per_hour_normal_days'] = cost_per_min_normal_day_less_than_twelve * 60
+        data['cost_per_hour_public_holiday'] = cost_per_min_public_holiday_less_than_twelve * 60
+
+    # total_cost = (total_days * total_minutes_one_day * cost_per_min_normal_day * labour_count) + (public_holidays * total_minutes_one_day * cost_per_min_public_holiday * labour_count) + transportation_cost
+
     data['job_location'] = job_location
     data['labour_skill'] = labour_skill
     data['labour_count'] = labour_count
@@ -240,8 +264,6 @@ def booking_preview(request):
     data['hours'] = int((total_minutes_one_day * (public_holidays + total_days) * labour_count) / 60)
     data['mins'] = int((total_minutes_one_day * (public_holidays + total_days) * labour_count) % 60)
     data['public_holidays'] = public_holidays
-    data['cost_per_hour_normal_days'] = skill_obj.cost_per_hour_normal_days
-    data['cost_per_hour_public_holiday'] = skill_obj.cost_per_hour_public_holiday
     data['transportation_cost'] = transportation_cost
     data['distance'] = my_dist
     data['cars'] = cars
@@ -286,6 +308,29 @@ def booking_view(request):
 
         booking_obj = Booking(contractor_name=contractor_name, contractor_email=contractor_email, labour_skill=labour_skill, labour_count=labour_count, labour_gender=labour_gender, start_date=start_date, end_date=end_date, start_time=start_time, end_time=end_time, location=location, status=status, amount=amount)
         booking_obj.save()
+
+        # Sending emails to admins
+        subject = "Hayame: New Booking"
+        body = '''You have got a new booking.
+        Booking Details:
+        Contractor Name: {contractor_name}
+        Skill Required: {labour_skill}
+        Labour Count: {labour_count}
+        Labour Gender: {labour_gender}
+        Start Date: {start_date}
+        End Date: {end_date}
+        Location: {location}'''.format(contractor_name=contractor_name, labour_skill=labour_skill, labour_count=labour_count, labour_gender=labour_gender, start_date=start_date, end_date=end_date, location=location)
+        
+        all_admins = Account.objects.filter(user_role='Admin')
+        for admin in all_admins:
+            send_notification(admin.email, subject, body)
+
+        # Sending email to contractor
+        subject = "Hayame: Booking Confirmed"
+        body = '''Hello {contractor_name},
+        Your Booking is confirmed. You can keep checking your status at this link:
+        https://hayame.my/dashboard/contractor-bookings'''.format(contractor_name=contractor_name)
+        send_notification(contractor_email, subject, body)
 
         data = {}
         data['success'] = True
