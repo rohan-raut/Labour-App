@@ -2,8 +2,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from api_services.models import Account, Skill, Labour, Booking, Payment, LaboursAllocated, PublicHoliday
-from api_services.serializers import AccountSerializer, SkillSerializer, LabourSerializer, BookingSerializer, LaboursAllocatedSerializer, PublicHolidaySerializer
+from api_services.models import Account, Skill, Labour, Booking, Payment, LaboursAllocated, PublicHoliday, Notification
+from api_services.serializers import AccountSerializer, SkillSerializer, LabourSerializer, BookingSerializer, LaboursAllocatedSerializer, PublicHolidaySerializer, NotificationSerializer
 from rest_framework.authtoken.models import Token
 from api_services.filters import SkillFilter, BookingFilter, LabourFilter, LaboursAllocatedFilter
 from django.contrib.auth import authenticate
@@ -325,12 +325,17 @@ def booking_view(request):
         for admin in all_admins:
             send_notification(admin.email, subject, body)
 
+            # Add in Notification Table
+            notification_obj = Notification(user_id=admin.user_id, booking=booking_obj.booking_id, is_read=False)
+            notification_obj.save()
+
         # Sending email to contractor
         subject = "Hayame: Booking Confirmed"
         body = '''Hello {contractor_name},
         Your Booking is confirmed. You can keep checking your status at this link:
         https://hayame.my/dashboard/contractor-bookings'''.format(contractor_name=contractor_name)
         send_notification(contractor_email, subject, body)
+
 
         data = {}
         data['success'] = True
@@ -370,7 +375,6 @@ def labour_allocation_view(request):
         booking_obj = Booking.objects.get(booking_id=request.data['booking_id'])
         booking_obj.status = "Complete"
         booking_obj.save()
-        print(request.data['labour_ids'])
         labour_ids = request.data['labour_ids']
         for id in labour_ids:
             labour_obj = Labour.objects.get(labour_id=id)
@@ -514,7 +518,27 @@ def report_view(request):
     return Response(data)
     
     
-    
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def notification_view(request):
+    data = []
+    user_id = request.user.user_id
+    notifications = Notification.objects.filter(user_id=user_id)
+
+    for notification in notifications:
+        data.append({
+            'contractor_name': notification.booking.contractor_name,
+            'contractor_email': notification.booking.contractor_email,
+            'labour_skill': notification.booking.labour_skill,
+            'booking_id': notification.booking.booking_id,
+            'date_and_time': notification.date_and_time,
+            'is_read' : notification.is_read
+        })
+
+    data.sort(key=lambda x: x.date_and_time, reverse=True)
+
+    return Response(data)
+
 
 # Update Views
 
@@ -613,6 +637,20 @@ def update_booking_view(request, pk):
             data["success"] = "Update Successful."
             return Response(data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+@api_view(['PUT'])
+@permission_classes((IsAuthenticated,))
+def update_notification_view(request):
+
+    data = {}
+    notificatoins = Notification.objects.filter(user_id=request.user.user_id)
+    for notification in notificatoins:
+        notification.is_read = True
+        notification.save()
+
+    data['success'] = 'Updated Successfully'
+    return Response(data)
 
 
 

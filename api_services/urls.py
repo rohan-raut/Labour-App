@@ -1,5 +1,5 @@
 from django.urls import path
-from api_services.views import registration_view, user_info, skill_list, labour_list, booking_view, update_user_info, update_skill_list, update_labour_list, update_booking_view, delete_booking_view, delete_labour_list, delete_skill_list, change_password_view, send_email_view, verify_user_view, labour_allocation_view, public_holidays_view, forgot_password_view, reset_password_view, report_view, login_view, booking_preview
+from api_services.views import registration_view, user_info, skill_list, labour_list, booking_view, update_user_info, update_skill_list, update_labour_list, update_booking_view, delete_booking_view, delete_labour_list, delete_skill_list, change_password_view, send_email_view, verify_user_view, labour_allocation_view, public_holidays_view, forgot_password_view, reset_password_view, report_view, login_view, booking_preview, notification_view, update_notification_view
 from rest_framework.authtoken.views import obtain_auth_token
 
 
@@ -19,10 +19,12 @@ urlpatterns = [
     path('send-email', send_email_view, name="send_email_view"),
     path('change-password', change_password_view, name="change_password_view"),
     path('report', report_view, name="report_view"),
+    path('notifications', notification_view, name="notification_view"),
     path('update/user-info/<str:pk>', update_user_info, name="update_user_info"),
     path('update/skill-list/<str:pk>', update_skill_list, name="update_skill_list"),
     path('update/labour-list/<str:pk>', update_labour_list, name="update_labour_list"),
     path('update/booking/<int:pk>', update_booking_view, name="update_booking_view"),
+    path('update/notifications', update_notification_view, name="update_notification_view"),
     path('delete/skill-list/<str:pk>', delete_skill_list, name="delete_skill_list"),
     path('delete/labour-list/<str:pk>', delete_labour_list, name="delete_labour_list"),
     path('delete/booking/<int:pk>', delete_booking_view, name="delete_booking_view"),

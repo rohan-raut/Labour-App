@@ -165,6 +165,14 @@ class PublicHoliday(models.Model):
     event = models.CharField(max_length=1000)
     date = models.DateField()
 
+
+class Notification(models.Model):
+    id = models.AutoField(primary_key=True)
+    user_id = models.ForeignKey(Account, on_delete=models.CASCADE)
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE)
+    date_and_time = models.DateTimeField(auto_now=True)
+    is_read = models.BooleanField(default=False)
+
  
 # Token generation while user is registered
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)

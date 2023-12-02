@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api_services.models import Account, Skill, Labour, Booking, Payment, LaboursAllocated, PublicHoliday
+from api_services.models import Account, Skill, Labour, Booking, Payment, LaboursAllocated, PublicHoliday, Notification
 
 
 class SkillSerializer(serializers.ModelSerializer):
@@ -72,3 +72,10 @@ class UserInfoSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'password': {'write_only': True}
         }
+
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ['id', 'user_id', 'booking', 'is_read', 'date_and_time']
