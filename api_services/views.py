@@ -326,7 +326,7 @@ def booking_view(request):
             send_notification(admin.email, subject, body)
 
             # Add in Notification Table
-            notification_obj = Notification(user_id=admin.user_id, booking=booking_obj.booking_id, is_read=False)
+            notification_obj = Notification(user_id=admin, booking=booking_obj, is_read=False)
             notification_obj.save()
 
         # Sending email to contractor
@@ -535,7 +535,7 @@ def notification_view(request):
             'is_read' : notification.is_read
         })
 
-    data.sort(key=lambda x: x.date_and_time, reverse=True)
+    data.sort(key=lambda x: x['date_and_time'], reverse=True)
 
     return Response(data)
 

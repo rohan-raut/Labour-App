@@ -134,7 +134,7 @@ class Labour(models.Model):
 class Booking(models.Model):
     booking_id = models.AutoField(primary_key=True)
     contractor_name = models.CharField(max_length=500)
-    contractor_email = models.EmailField(unique=True)
+    contractor_email = models.EmailField()
     labour_skill = models.CharField(max_length=500)
     labour_count = models.IntegerField()
     labour_gender = models.CharField(max_length=10, default="Male")
