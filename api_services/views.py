@@ -16,6 +16,8 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import googlemaps
 import datetime
+from google.oauth2 import id_token
+from google.auth.transport import requests
 
 global sender_email, sender_name, password
 
@@ -41,6 +43,45 @@ def send_notification(receiver_email, subject, body):
 
 
 # Get and Post Views
+    
+@api_view(['POST'])
+def google_signin_view(request):
+    token = request.data['token']
+    data = {}
+    
+    try:
+        # Specify the CLIENT_ID of the app that accesses the backend:
+        CLIENT_ID = "311936151809-eupfq5t4fcg43bu87kne2jnkssovhh27.apps.googleusercontent.com"
+        idinfo = id_token.verify_oauth2_token(token, requests.Request(), CLIENT_ID)
+
+        # ID token is valid. Get the user's Google Account ID from the decoded token.
+        
+        email = idinfo['email']
+        
+        user = None
+        try:
+            user = Account.objects.get(email=email)
+        except:
+            pass
+
+        if(user == None):
+            first_name = idinfo['given_name']
+            last_name = idinfo['family_name']
+            password = Account.objects.make_random_password(length=100)
+            new_user = Account.objects.create_user(email=email, username=email, first_name=first_name, last_name=last_name, phone=None, password=password)
+            new_user.save()
+
+        user = Account.objects.get(email=email)
+        data['response'] = "Login Successful"
+        data['token'] = Token.objects.get(user=user).key
+        data['is_logged_in'] = True
+        
+    except ValueError:
+        # Invalid token
+        print("Cannot login")     
+
+    return Response(data)
+    
 
 @api_view(['POST'])
 def login_view(request):

@@ -28,7 +28,7 @@ labour_category = (
 # Create your models here.
 
 class MyAccountManager(BaseUserManager):
-    def create_user(self, email, username, first_name, last_name, phone, password=None):
+    def create_user(self, email, username, first_name, last_name, phone=None, password=None):
         if not email:
             raise ValueError("User must have an email address")
         if not username:
@@ -37,29 +37,28 @@ class MyAccountManager(BaseUserManager):
             raise ValueError("User must have a first name")
         if not last_name:
             raise ValueError("User must have a last name")
-        if not phone:
-            raise ValueError("User must have a phone number")
 
         user = self.model(
             email = self.normalize_email(email),
             username = username,
             first_name = first_name,
             last_name = last_name,
-            phone = phone,
             user_role = "Contractor"
         )
+
+        if phone != None:
+            user.phone = phone
 
         user.set_password(password)
         user.save(using=self.db)
         return user
 
     
-    def create_superuser(self, email, username, first_name, last_name, phone, password):
+    def create_superuser(self, email, username, first_name, last_name, password, phone=None):
         user = self.create_user(
             email = email,
             username = username,
             password = password,
-            phone = phone,
             first_name = first_name,
             last_name = last_name,
         )
@@ -69,6 +68,8 @@ class MyAccountManager(BaseUserManager):
         user.is_superuser = True
         user.is_staff = True
         user.save(using=self.db)
+        if phone != None:
+            user.phone = phone
         return user
 
 
@@ -90,7 +91,7 @@ class Account(AbstractBaseUser, PermissionsMixin):
     is_superuser = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["username", "first_name", "last_name", "phone"]
+    REQUIRED_FIELDS = ["username", "first_name", "last_name"]
 
     objects = MyAccountManager()
 
