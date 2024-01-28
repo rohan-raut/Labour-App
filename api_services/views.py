@@ -16,6 +16,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import googlemaps
 import datetime
+from datetime import datetime
 from google.oauth2 import id_token
 from google.auth.transport import requests
 
@@ -69,6 +70,7 @@ def google_signin_view(request):
             last_name = idinfo['family_name']
             password = Account.objects.make_random_password(length=100)
             new_user = Account.objects.create_user(email=email, username=email, first_name=first_name, last_name=last_name, phone=None, password=password)
+            new_user.is_verified = True
             new_user.save()
 
         user = Account.objects.get(email=email)
@@ -567,12 +569,31 @@ def notification_view(request):
     notifications = Notification.objects.filter(user_id=user_id)
 
     for notification in notifications:
+        naive = notification.date_and_time.replace(tzinfo=None)
+        diff = datetime.now() - naive
+        diff = diff.total_seconds()
+        weeks = int(diff/(60*60*24*7))
+        days = int(diff/(60*60*24)) 
+        hours = int(diff/(60*60))
+        mins = int(diff/60)
+
+        age = ""
+        if(weeks != 0):
+            age = str(weeks) + "w ago"
+        elif(days != 0):
+            age = str(days) + "d ago"
+        elif(hours != 0):
+            hours = str(hours) + "h ago"
+        else:
+            mins = str(mins) + "mins ago"
+
         data.append({
             'contractor_name': notification.booking.contractor_name,
             'contractor_email': notification.booking.contractor_email,
             'labour_skill': notification.booking.labour_skill,
             'booking_id': notification.booking.booking_id,
             'date_and_time': notification.date_and_time,
+            'age': age,
             'is_read' : notification.is_read
         })
 
