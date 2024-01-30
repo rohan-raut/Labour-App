@@ -230,8 +230,8 @@ def booking_preview(request):
     start_time = request.data['start_time']
     end_time = request.data['end_time']
 
-    start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d').date()
-    end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
+    start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+    end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
 
     skill_obj = Skill.objects.get(skill=labour_skill)
     total_days = (end_date - start_date).days + 1
@@ -246,10 +246,10 @@ def booking_preview(request):
 
     hour = start_time[0] + start_time[1]
     minutes = start_time[3] + start_time[4]
-    start_time = datetime.datetime(2023, 6, 3, int(hour), int(minutes), 00)
+    start_time = datetime(2023, 6, 3, int(hour), int(minutes), 00)
     hour = end_time[0] + end_time[1]
     minutes = end_time[3] + end_time[4]
-    end_time = datetime.datetime(2023, 6, 3, int(hour), int(minutes), 00)
+    end_time = datetime(2023, 6, 3, int(hour), int(minutes), 00)
     time_diff = end_time - start_time
     total_minutes_one_day = time_diff.total_seconds() / 60
     total_hours_one_day = total_minutes_one_day / 60
@@ -369,7 +369,7 @@ def booking_view(request):
             send_notification(admin.email, subject, body)
 
             # Add in Notification Table
-            notification_obj = Notification(user_id=admin, booking=booking_obj, is_read=False)
+            notification_obj = Notification(user_id=admin, booking=booking_obj, is_read=False, date_and_time=datetime.now())
             notification_obj.save()
 
         # Sending email to contractor
@@ -583,9 +583,9 @@ def notification_view(request):
         elif(days != 0):
             age = str(days) + "d ago"
         elif(hours != 0):
-            hours = str(hours) + "h ago"
+            age = str(hours) + "h ago"
         else:
-            mins = str(mins) + "mins ago"
+            age = str(mins) + "mins ago"
 
         data.append({
             'contractor_name': notification.booking.contractor_name,

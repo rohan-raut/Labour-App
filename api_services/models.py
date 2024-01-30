@@ -171,7 +171,7 @@ class Notification(models.Model):
     id = models.AutoField(primary_key=True)
     user_id = models.ForeignKey(Account, on_delete=models.CASCADE)
     booking = models.ForeignKey(Booking, on_delete=models.CASCADE)
-    date_and_time = models.DateTimeField(auto_now=True)
+    date_and_time = models.DateTimeField()
     is_read = models.BooleanField(default=False)
 
  
