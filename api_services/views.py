@@ -19,6 +19,9 @@ import datetime
 from datetime import datetime
 from google.oauth2 import id_token
 from google.auth.transport import requests
+from django.shortcuts import render
+from django.http import HttpResponse, HttpResponseRedirect
+from django.views.decorators.csrf import csrf_exempt
 
 global sender_email, sender_name, password
 
@@ -41,6 +44,31 @@ def send_notification(receiver_email, subject, body):
         return True
     except smtplib.SMTPException:
         return False
+
+
+# Payment Gateway integration
+@csrf_exempt
+def payment_callback(request):
+    tranID = request.POST.get('tranID')
+    orderid = request.POST.get('orderid')
+    status = request.POST.get('status')
+    domain = request.POST.get('domain')
+    amount = request.POST.get('amount')
+    currency = request.POST.get('currency')
+    paydate = request.POST.get('paydate')
+    appcode = request.POST.get('appcode')
+    skey = request.POST.get('skey')
+
+    booking_obj = Booking.objects.get(booking_id=orderid)
+    booking_obj.status = 'Completed'
+    booking_obj.payment_status = 'Completed'
+    booking_obj.save()
+
+    payment_obj = Payment(booking_id=booking_obj, transaction_id=tranID, payment_date_time=paydate, payment_status=status, merchant_id=domain, country=currency, amount=amount)
+    payment_obj.save()
+
+
+    return HttpResponseRedirect("https://hayame.my/dashboard/contractor-bookings")
 
 
 # Get and Post Views
@@ -313,6 +341,14 @@ def booking_preview(request):
     data['total_cost'] = total_cost
     data['success'] = True
 
+    contractor_name = request.user.first_name + ' ' + request.user.last_name
+    contractor_email = request.user.email
+    
+    booking_obj = Booking(contractor_name=contractor_name, contractor_email=contractor_email, labour_skill=labour_skill, labour_count=labour_count, labour_gender=labour_gender, start_date=start_date, end_date=end_date, start_time=start_time, end_time=end_time, location=job_location, status='Pending', amount=total_cost, payment_status='Pending')
+    booking_obj.save()
+
+    data['booking_id'] = booking_obj.booking_id
+
     return Response(data)
      
 
@@ -349,7 +385,7 @@ def booking_view(request):
         status = 'Pending'
         amount = request.data['amount']
 
-        booking_obj = Booking(contractor_name=contractor_name, contractor_email=contractor_email, labour_skill=labour_skill, labour_count=labour_count, labour_gender=labour_gender, start_date=start_date, end_date=end_date, start_time=start_time, end_time=end_time, location=location, status=status, amount=amount)
+        booking_obj = Booking(contractor_name=contractor_name, contractor_email=contractor_email, labour_skill=labour_skill, labour_count=labour_count, labour_gender=labour_gender, start_date=start_date, end_date=end_date, start_time=start_time, end_time=end_time, location=location, status=status, amount=amount, payment_status='Pending')
         booking_obj.save()
 
         # Sending emails to admins

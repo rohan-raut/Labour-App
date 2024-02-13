@@ -1,5 +1,5 @@
 from django.urls import path
-from api_services.views import registration_view, user_info, skill_list, labour_list, booking_view, update_user_info, update_skill_list, update_labour_list, update_booking_view, delete_booking_view, delete_labour_list, delete_skill_list, change_password_view, send_email_view, verify_user_view, labour_allocation_view, public_holidays_view, forgot_password_view, reset_password_view, report_view, login_view, booking_preview, notification_view, update_notification_view, google_signin_view
+from api_services.views import registration_view, user_info, skill_list, labour_list, booking_view, update_user_info, update_skill_list, update_labour_list, update_booking_view, delete_booking_view, delete_labour_list, delete_skill_list, change_password_view, send_email_view, verify_user_view, labour_allocation_view, public_holidays_view, forgot_password_view, reset_password_view, report_view, login_view, booking_preview, notification_view, update_notification_view, google_signin_view, payment_callback
 from rest_framework.authtoken.views import obtain_auth_token
 
 
@@ -29,4 +29,5 @@ urlpatterns = [
     path('delete/skill-list/<str:pk>', delete_skill_list, name="delete_skill_list"),
     path('delete/labour-list/<str:pk>', delete_labour_list, name="delete_labour_list"),
     path('delete/booking/<int:pk>', delete_booking_view, name="delete_booking_view"),
+    path('payment', payment_callback, name="payment_callback"),
 ]

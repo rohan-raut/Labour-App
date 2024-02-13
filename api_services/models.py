@@ -8,6 +8,7 @@ from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
+from datetime import datetime
 
 user_role_choice = (
     ("Admin", "Admin"),
@@ -145,15 +146,20 @@ class Booking(models.Model):
     end_time = models.TimeField()
     location = models.CharField(max_length=1000)
     status = models.CharField(max_length=100)
-    amount = models.IntegerField()
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_status = models.CharField(max_length=100, default="Pending") # Pending/Complete
 
 
 class Payment(models.Model):
     payment_id = models.AutoField(primary_key=True)
-    booking_id = models.IntegerField()
-    payment_date = models.DateField()
-    amount = models.IntegerField()
-    status = models.CharField(max_length=100)
+    booking_id = models.ForeignKey(Booking, on_delete=models.PROTECT) # order_id
+    transaction_id = models.IntegerField(default=0)
+    payment_date_time = models.DateTimeField(default=datetime.now())
+    payment_status = models.CharField(max_length=10, default="-1")
+    merchant_id = models.CharField(max_length=100, default="null")
+    country = models.CharField(max_length=20, default="null")
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    
 
 
 class LaboursAllocated(models.Model):
