@@ -348,6 +348,8 @@ def booking_preview(request):
     booking_obj.save()
 
     data['booking_id'] = booking_obj.booking_id
+    data['contractor_email'] = contractor_email
+    data['contractor_name'] = contractor_name
 
     return Response(data)
      
@@ -358,12 +360,9 @@ def booking_view(request):
 
     if request.method == 'GET':
         if request.user.user_role == 'Admin':
-            snippets = Booking.objects.all()
+            snippets = Booking.objects.filter(payment_status='Complete')
         else:
-            snippets = Booking.objects.filter(contractor_email=request.user.email)
-
-        if request.user.user_role == "Contractor":
-            snippets = Booking.objects.filter(contractor_email=request.user.email)
+            snippets = Booking.objects.filter(contractor_email=request.user.email, payment_status='Complete')
 
         filterset = BookingFilter(request.GET, queryset=snippets)
         if filterset.is_valid():
@@ -572,7 +571,9 @@ def report_view(request):
         end_time = str(booking_obj.end_time)
         hours = int(end_time[0] + end_time[1]) - int(start_time[0] + start_time[1])
         mins = int(end_time[3] + end_time[4]) - int(start_time[3] + start_time[4])
-        if(mins != 0):
+        if(mins < 0):
+            hours = str(hours - 1) + ".5"
+        elif(mins > 0):
             hours = str(hours) + ".5"
         days = (booking_obj.end_date - booking_obj.start_date).days + 1
         obj = {}
@@ -583,7 +584,7 @@ def report_view(request):
         obj['contractor_email'] = booking_obj.contractor_email
         obj['labour_skill'] = booking_obj.labour_skill
         obj['labour_count'] = booking_obj.labour_count
-        obj['hours'] = hours * days
+        obj['hours'] = float(hours) * days
         obj['start_date'] = booking_obj.start_date
         obj['end_date'] = booking_obj.end_date
         obj['amount'] = (booking_obj.amount / booking_obj.labour_count)
