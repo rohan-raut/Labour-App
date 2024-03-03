@@ -12,6 +12,7 @@ import ssl
 import email
 from email import encoders
 from email.mime.base import MIMEBase
+from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import googlemaps
@@ -22,6 +23,7 @@ from google.auth.transport import requests
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
+from django.templatetags.static import static
 
 global sender_email, sender_name, password
 
@@ -31,6 +33,46 @@ password = "dnndjbtorrxpyowx"
 
 def send_notification(receiver_email, subject, body):
     try:
+        html_body = """\
+        <html>
+        <head>
+            <style>
+                .container{{
+                    border: 2px solid black;
+                }}
+                .header{{
+                    text-align: center;
+                    background-color: #2FB0AA;
+                    padding: 10px 0px;
+                }}
+                .header img{{
+                    width: 200px;
+                }}
+                .content{{
+                    background-color: #E9EBF8;
+                }}
+                p{{
+                    margin: 0px;
+                    padding: 8px;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <img src="cid:Mailtrapimage">
+                </div>
+                <div class="content">
+                    {body}
+                </div>
+            </div>
+        </body>
+        </html>""".format(body=body)
+
+        fp = open('static/logo.png', 'rb')
+        image = MIMEImage(fp.read())
+        fp.close()
+        
         smtpObj = smtplib.SMTP(host='smtp.gmail.com', port=587)
         smtpObj.starttls()
         smtpObj.login(sender_email, password)
@@ -38,7 +80,9 @@ def send_notification(receiver_email, subject, body):
         message["From"] = sender_name
         message["To"] = receiver_email
         message["Subject"] = subject
-        message.attach(MIMEText(body, "plain"))
+        image.add_header('Content-ID', '<Mailtrapimage>')
+        message.attach(MIMEText(html_body, "html"))
+        message.attach(image)
         text = message.as_string()
         smtpObj.sendmail(sender_email, receiver_email, text)
         return True
@@ -47,6 +91,13 @@ def send_notification(receiver_email, subject, body):
 
 
 # Payment Gateway integration
+    
+@csrf_exempt
+def payment_callback_handel_redirect(request):
+
+    return HttpResponseRedirect("https://hayame.my/dashboard/contractor-bookings")
+
+
 @csrf_exempt
 def payment_callback(request):
     tranID = request.POST.get('tranID')
@@ -59,14 +110,31 @@ def payment_callback(request):
     appcode = request.POST.get('appcode')
     skey = request.POST.get('skey')
 
-    booking_obj = Booking.objects.get(booking_id=orderid)
-    booking_obj.status = 'Completed'
-    booking_obj.payment_status = 'Completed'
-    booking_obj.save()
+    if(status == '00'):
+        booking_obj = Booking.objects.get(booking_id=orderid)
+        booking_obj.payment_status = 'Complete'
+        booking_obj.save()
 
-    payment_obj = Payment(booking_id=booking_obj, transaction_id=tranID, payment_date_time=paydate, payment_status=status, merchant_id=domain, country=currency, amount=amount)
-    payment_obj.save()
+        payment_obj = Payment(booking_id=booking_obj, transaction_id=tranID, payment_date_time=paydate, payment_status=status, merchant_id=domain, country=currency, amount=amount)
+        payment_obj.save()
 
+        # Sending emails to admins
+        subject = "Hayame: New Booking"
+        body = '''<p>You have got a new Booking</p>
+        <p><strong>Booking Details:</strong></p>
+        <p>Contractor Name: {contractor_name}</p>
+        <p>Skill Required: {labour_skill}</p>
+        <p>Labour Count: {labour_count}</p>
+        <p>Start Date: {start_date}</p>
+        <p>End Date: {end_date}</p>
+        <p>Location: {location}</p>'''.format(contractor_name=booking_obj.contractor_name, labour_skill=booking_obj.labour_skill, labour_count=booking_obj.labour_count, labour_gender=booking_obj.labour_gender, start_date=booking_obj.start_date, end_date=booking_obj.end_date, location=booking_obj.location)
+
+        all_admins = Account.objects.filter(user_role='Admin')
+        for admin in all_admins:
+            send_notification(admin.email, subject, body)
+            # Add in Notification Table
+            notification_obj = Notification(user_id=admin, booking=booking_obj, is_read=False, date_and_time=datetime.now())
+            notification_obj.save()
 
     return HttpResponseRedirect("https://hayame.my/dashboard/contractor-bookings")
 
@@ -409,9 +477,9 @@ def booking_view(request):
 
         # Sending email to contractor
         subject = "Hayame: Booking Confirmed"
-        body = '''Hello {contractor_name},
-        Your Booking is confirmed. You can keep checking your status at this link:
-        https://hayame.my/dashboard/contractor-bookings'''.format(contractor_name=contractor_name)
+        body = '''<p>Hello {contractor_name},</p>
+        <p>Your Booking is confirmed. You can keep checking your status at this link:
+        https://hayame.my/dashboard/contractor-bookings</p>'''.format(contractor_name=contractor_name)
         send_notification(contractor_email, subject, body)
 
 
