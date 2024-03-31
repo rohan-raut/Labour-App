@@ -31,6 +31,22 @@ sender_email = "hayamedotmy@gmail.com"
 sender_name = "Hayame Admin"
 password = "dnndjbtorrxpyowx"
 
+def changeTimeFormat(time):
+    hr = time[0] + time[1]
+    mn = time[3] + time[4]
+    new_time = "" + (int(hr) % 12) + ":" + mn
+    if (int(hr) % 12 == 0):
+      new_time = "12" + ":" + mn
+    
+    if (int(hr) >= 12):
+      new_time += " PM"
+    else:
+      new_time += " AM"
+    
+    return new_time
+
+
+
 def send_notification(receiver_email, subject, body):
     try:
         html_body = """\
@@ -87,6 +103,7 @@ def send_notification(receiver_email, subject, body):
         smtpObj.sendmail(sender_email, receiver_email, text)
         return True
     except smtplib.SMTPException:
+        print("Some problem occured")
         return False
 
 
@@ -122,12 +139,14 @@ def payment_callback(request):
         subject = "Hayame: New Booking"
         body = '''<p>You have got a new Booking</p>
         <p><strong>Booking Details:</strong></p>
-        <p>Contractor Name: {contractor_name}</p>
+        <p>Customer Name: {contractor_name}</p>
         <p>Skill Required: {labour_skill}</p>
         <p>Labour Count: {labour_count}</p>
         <p>Start Date: {start_date}</p>
         <p>End Date: {end_date}</p>
-        <p>Location: {location}</p>'''.format(contractor_name=booking_obj.contractor_name, labour_skill=booking_obj.labour_skill, labour_count=booking_obj.labour_count, labour_gender=booking_obj.labour_gender, start_date=booking_obj.start_date, end_date=booking_obj.end_date, location=booking_obj.location)
+        <p>Start Time: {start_time}</p>
+        <p>End Time: {end_time}</p>
+        <p>Location: {location}</p>'''.format(contractor_name=booking_obj.contractor_name, labour_skill=booking_obj.labour_skill, labour_count=booking_obj.labour_count, labour_gender=booking_obj.labour_gender, start_date=booking_obj.start_date, end_date=booking_obj.end_date, location=booking_obj.location, start_time=changeTimeFormat(booking_obj.start_time), end_time=changeTimeFormat(booking_obj.end_time))
 
         all_admins = Account.objects.filter(user_role='Admin')
         for admin in all_admins:
@@ -164,8 +183,14 @@ def google_signin_view(request):
         if(user == None):
             first_name = idinfo['given_name']
             last_name = idinfo['family_name']
+            if "phone" in request.data:
+                phone = request.data['phone']
+            else:
+                data['is_logged_in'] = False
+                data['response'] = "Register your Account before trying to Login"
+                return Response(data)
             password = Account.objects.make_random_password(length=100)
-            new_user = Account.objects.create_user(email=email, username=email, first_name=first_name, last_name=last_name, phone=None, password=password)
+            new_user = Account.objects.create_user(email=email, username=email, first_name=first_name, last_name=last_name, phone=phone, password=password)
             new_user.is_verified = True
             new_user.save()
 
@@ -224,7 +249,8 @@ def registration_view(request):
             receiver_email = account.email
             subject = "Hayame: Email Verification"
             body = "Hello " + account.first_name + ",\nPlease click on the given link to verify your email address.\nLink: http://hayame.my/verify-user?user=" + token
-            notification = send_notification(receiver_email, subject, body)
+            print("emial: " + receiver_email)
+            send_notification(receiver_email, subject, body)
 
         else:
             data = serializer.errors
@@ -368,7 +394,7 @@ def booking_preview(request):
         })
 
     cars = int((labour_count + 3) / 4)
-    transportation_cost = my_dist * 1.5 * cars
+    transportation_cost = my_dist * 0 * cars
     transportation_cost = round(transportation_cost)
 
     total_cost = 0
